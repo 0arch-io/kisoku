@@ -1,0 +1,35 @@
+group: bbh_ws
+task:
+  - bbh_ws_boolean_expressions
+  - bbh_ws_causal_judgement
+  - bbh_ws_date_understanding
+  - bbh_ws_disambiguation_qa
+  - bbh_ws_dyck_languages
+  - bbh_ws_formal_fallacies
+  - bbh_ws_geometric_shapes
+  - bbh_ws_hyperbaton
+  - bbh_ws_logical_deduction_five_objects
+  - bbh_ws_logical_deduction_seven_objects
+  - bbh_ws_logical_deduction_three_objects
+  - bbh_ws_movie_recommendation
+  - bbh_ws_multistep_arithmetic_two
+  - bbh_ws_navigate
+  - bbh_ws_object_counting
+  - bbh_ws_penguins_in_a_table
+  - bbh_ws_reasoning_about_colored_objects
+  - bbh_ws_ruin_names
+  - bbh_ws_salient_translation_error_detection
+  - bbh_ws_snarks
+  - bbh_ws_sports_understanding
+  - bbh_ws_temporal_sequences
+  - bbh_ws_tracking_shuffled_objects_five_objects
+  - bbh_ws_tracking_shuffled_objects_seven_objects
+  - bbh_ws_tracking_shuffled_objects_three_objects
+  - bbh_ws_web_of_lies
+  - bbh_ws_word_sorting
+aggregate_metric_list:
+  - metric: exact_match
+    aggregation: mean
+    weight_by_size: true
+metadata:
+  version: 3.0
