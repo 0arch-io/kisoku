@@ -1,0 +1,32 @@
+{
+ "records": 22386,
+ "shards": 31,
+ "total_tokens": 575516964,
+ "avg_tokens": 25708.78960064326,
+ "max_tokens": 55189,
+ "avg_qa_per_doc": 13.64312516751541,
+ "by_source": {
+  "science": 15200,
+  "pg19": 7186
+ },
+ "tasks": {
+  "note_single": 55901,
+  "note_multi": 23908,
+  "note_multiquery": 8072,
+  "chain": 26635,
+  "chain_value": 26635,
+  "count": 111747,
+  "most_frequent": 33599,
+  "top5": 16119,
+  "next_sentence": 44699,
+  "first": 22473
+ },
+ "length_hist": {
+  "0-8000": 3658,
+  "8000-16000": 4775,
+  "16000-32000": 8587,
+  "32000-48000": 2471,
+  "48000-1000000000": 2895
+ },
+ "errors": 0
+}

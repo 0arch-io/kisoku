@@ -1,0 +1,15 @@
+[Unit]
+Description=Kisoku v2 pretrain (MaxText on v4-32)
+After=network-online.target kisoku-gcsfuse.service
+Requires=kisoku-gcsfuse.service
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mountpoint -q %h/gcsfuse
+ExecStart=/bin/bash %h/bin/kisoku-run.sh
+Restart=on-failure
+RestartSec=300
+TimeoutStopSec=900
+
+[Install]
+WantedBy=default.target

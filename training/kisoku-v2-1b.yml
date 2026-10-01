@@ -1,0 +1,294 @@
+# Kisoku v2-1B — MaxText training config
+# Derived from src/maxtext/configs/base.yml + qwen3-1.7b-base.yml as templates.
+# Architecture per PLAN-1B.md. Total params ~1.60B
+# (22 layers × 60.82M + 263M tied embed; MTP and NoPE both dropped — vanilla qwen3 dense).
+
+# Inherit defaults from base.yml. MaxText resolves this via OmegaConf.merge —
+# base loaded first, our overrides applied on top.
+base_config: base.yml
+#
+# Launch command (after MaxText install + LIBTPU env from v4 reference):
+#   export LIBTPU_INIT_ARGS="--xla_enable_async_all_gather=true TPU_MEGACORE=MEGACORE_DENSE"
+#   python -m maxtext.trainers.pre_train.train \
+#     src/maxtext/configs/base.yml \
+#     /path/to/kisoku-v2/kisoku-v2-1b.yml
+#
+# MaxText layers configs left-to-right; this file overrides everything from base.yml.
+# All architecture overrides are inline here, so qwen3-1.7b-base.yml is NOT layered in
+# (we use decoder_block="qwen3" but with our own dimensions, not Qwen's).
+
+###################################################################
+# Run identity
+###################################################################
+run_name: "kisoku-v2-1b-pretrain"
+base_output_directory: "gs://pantheon-tpu-training/kisoku-v2-1b/"
+
+###################################################################
+# Architecture — flagship spec (deep research 2026-05-05, NoPE dropped 2026-05-05 PM)
+# Total params: 22 layers × 60.82M + 263M tied embed = 1.601B (vanilla qwen3 dense).
+# Sits between Llama-3.2-1B (1.24B) and SmolLM-1.7B (1.71B).
+###################################################################
+base_emb_dim: 2048              # hidden_size, matches SmolLM3-3B and Qwen3-1.7B
+base_num_query_heads: 16
+base_num_kv_heads: 4            # GQA 4:1 (modern dense default)
+base_mlp_dim: 8192              # FLAGSHIP CHANGE 5632→8192. Matches Llama-3.2-1B
+                                # exactly; 5632 (=2.75×) was undersized for 1B
+base_num_decoder_layers: 22     # FLAGSHIP CHANGE 24→22. With MLP=8192, 22 layers
+                                # = 1.60B params. Was wishful at 30 (would be 2.1B,
+                                # over budget). 22 is the sweet spot for SmolLM-1.7B
+                                # class while leaving compute headroom for MTP add.
+head_dim: 128
+mlp_activations: ["silu", "linear"]   # SwiGLU
+vocab_size: 128256              # Llama-3.2 tokenizer (locked decision)
+
+decoder_block: "qwen3"          # QK-Norm + GQA + RMSNorm out of the box
+
+normalization_layer_epsilon: 1.0e-6
+rope_max_timescale: 5_000_000   # supports ~128K context per YaRN paper
+rope_type: "default"
+
+use_qk_norm: True
+logits_via_embedding: True      # tied embeddings (saves 263M params)
+normalize_embedding_logits: False  # CRITICAL v1 lesson — do NOT change
+enable_dropout: False
+attention_bias: False
+mlp_bias: False
+
+# NoPE DROPPED 2026-05-05 PM after deep research:
+# 1. RNoPE-SWA's quantitative claims (22% vs 41% retrieval at 256K) are from an
+#    8B model (Yang et al. arXiv 2501.18795). SmolLM3 (3B) reused the recipe but
+#    published only qualitative claims. NO published 1B-class NoPE ablation exists.
+# 2. Direct 1B peers — Llama-3.2-1B and Qwen3-1.7B — both ship plain RoPE.
+#    Architecture is not where 1B differentiates in 2026; data, tokens, and
+#    long-context post-phase are.
+# 3. CRITICAL config bug we hit: MaxText only honors nope_layer_interval when
+#    decoder_block == LLAMA4 (decoders.py:992). For our qwen3, the value was
+#    silently dropped. AND inhomogeneous_layer_cycle_interval=4 was actively
+#    harmful: decoders.py:988 sets scan_length = 22/4 = 5, shrinking the model
+#    to 567M instead of 1.6B (5 × 60.82M decoder + 263M tied embed = 567M exactly).
+# Long-context comes from a separate 50-100B-token RoPE-θ extension phase
+# (θ 1.5M → 5M → optionally YaRN), per the SmolLM3 / Llama-3.2-1B / Qwen3-1.7B recipe.
+
+# MTP DROPPED 2026-05-05 — verified incompatible with dense qwen3 block on v5e.
+# Error: `Qwen3DecoderLayer.__init__() missing 1 required positional argument: 'quant'`
+# MaxText's MTP layer at src/maxtext/layers/multi_token_prediction.py was written
+# for MoE/DeepSeek decoder blocks, not dense qwen3. Could fix by forking the layer
+# but not worth the work for v2; revisit in v3 if desired.
+mtp_num_layers: 0
+mtp_loss_scaling_factor: 0.1
+
+###################################################################
+# Tokenizer
+###################################################################
+tokenizer_type: "huggingface"
+# Use unsloth mirror — meta-llama/Llama-3.2-1B is gated (requires HF auth +
+# accepted Llama license). unsloth/Llama-3.2-1B is the same 128256-vocab
+# tokenizer mirrored without the gating wall. Verified working on v5e smoke.
+tokenizer_path: "unsloth/Llama-3.2-1B"
+add_bos: True
+add_eos: True
+
+###################################################################
+# Sequence length & batching
+###################################################################
+max_target_length: 4096         # base context; long-context phase comes later
+
+# Target: 4M tokens/step (1024 seqs × 4096 tokens) on v4-128.
+# v4-128 = 128 chips. per_device_batch_size = 1024 / 128 = 8.
+per_device_batch_size: 8.0
+gradient_accumulation_steps: 1
+packing: True
+
+###################################################################
+# Optimizer (Muon for matrices, AdamW for embeddings/norms)
+# Flagship-validated by Essential AI (3.7B) and Moonlight/Kimi-K2 (1T params)
+###################################################################
+opt_type: "muon"                # MaxText's muon impl falls back to AdamW for
+                                # non-matrix params (embeddings, norm scales, biases)
+
+# Muon (used for all matrix params: Q, K, V, O, gate, up, down)
+muon_beta: 0.95
+muon_weight_decay: 0.1
+muon_consistent_rms: 0.2        # FLAGSHIP CHANGE None→0.2. MaxText's own comment
+                                # recommends 0.2; consistent-RMS keeps hyperparams
+                                # stable across model widths instead of width-scaling
+
+# AdamW (used for embeddings, norms, biases under opt_type=muon)
+adam_b1: 0.9
+adam_b2: 0.95
+adam_eps: 1.0e-8
+adam_weight_decay: 0.1
+# FLAGSHIP CHANGE: also exclude embeddings from weight decay
+# SmolLM3 explicitly: "We remove weight decay from embedding layers to improve
+# training stability."
+adamw_mask: ['.*norm.*', '.*bias.*', '.*embed.*']
+
+gradient_clipping_threshold: 1.0
+
+# FLAGSHIP CHANGE: drop Z-loss. SmolLM3 ablation found "no impact on training
+# loss or downstream performance" at 1B-class scale. With QK-Norm already
+# preventing the failure mode, Z-loss is redundant overhead.
+z_loss_multiplier: 0.0
+
+###################################################################
+# Learning rate schedule (WSD) — flagship-recalibrated
+###################################################################
+# LR sweep ran at per_device_batch_size=1 (global ~262K tokens/step on v5e-64).
+# Final losses monotonic across 2/3/4.5/6/9e-4: 3.078 → 2.945 → 2.845 → 2.792 → 2.736.
+# 9e-4 won at batch=1; Round 3 (1.2e-3 + 1.5e-3) was lost to overnight preempt.
+#
+# REAL LAUNCH USES batch=8 (global ~2.1M tokens/step, 8x sweep batch).
+# Sqrt-scaled LR: 9e-4 / sqrt(8) = 3.18e-4 → rounded to 3.0e-4 (also matches
+# the original SmolLM3-recipe sqrt-scaling target from PLAN-1B.md).
+# Smoke test launches override LR via `LR=` env var; the value here only
+# applies to launch-real.sh and the watcher's recovery launches.
+learning_rate: 3.0e-4
+lr_schedule_type: 'wsd'
+
+# AUDIT CHANGE 0.0 → 0.33: decaying LR all the way to 0 wastes high-quality
+# data in the cooldown phase (Luo et al. arXiv 2511.18903; "1/3 of peak"
+# is the empirical sweet spot). Acceptable even with single-source Nemotron-CC
+# because cooldown still benefits from softer LR floor.
+learning_rate_final_fraction: 0.33
+
+# FLAGSHIP CHANGE 0.04→0.005. SmolLM3 uses 2000-step warmup (=0.4% of 500K).
+# 4% × 500K = 20K steps wastes ~2 days at suboptimal LR. With QK-Norm + Muon,
+# 2.5K steps (0.5%) is sufficient.
+warmup_steps_fraction: 0.005
+
+wsd_decay_steps_fraction: 0.10        # matches SmolLM3 exactly
+wsd_decay_style: 'linear'
+
+###################################################################
+# Training loop
+###################################################################
+# 2T tokens / 4M tokens-per-step = 500K steps
+steps: 500_000
+learning_rate_schedule_steps: 500_000
+log_period: 100
+
+###################################################################
+# Mesh / parallelism for v4-128 (single slice, full FSDP)
+###################################################################
+num_slices: 1
+dcn_data_parallelism: 1
+ici_data_parallelism: 1
+ici_fsdp_parallelism: 64        # matches the v4-128 reference (22b.sh) — v4
+                                # MEGACORE_DENSE collapses 2 TensorCores per chip
+                                # into 1 logical device, so v4-128 = 64 effective
+                                # FSDP shards. Set explicitly rather than -1 so we
+                                # don't surprise-auto-shard onto a different mesh.
+ici_tensor_parallelism: 1
+ici_pipeline_parallelism: 1
+
+# v4 has 4 chips per host → 128 chips = 32 hosts
+# FSDP-only is the right sharding for 1.34B at this scale: model + optimizer
+# state fit within HBM, no need for tensor or pipeline parallelism.
+
+###################################################################
+# Checkpointing — aggressive cadence due to spot preemption risk
+###################################################################
+enable_checkpointing: True
+async_checkpointing: True
+save_checkpoint_on_completion: True
+checkpoint_period: 2_000              # every ~17 min wall time
+max_num_checkpoints_to_keep: 5
+enable_autocheckpoint: True           # save on preemption signal
+
+###################################################################
+# Loss-spike defense (added 2026-05-06 per audit recommendation)
+# skip_step_on_spikes uses rolling z-score (window=skip_step_interval,
+# threshold=skip_step_scaling_factor*sigma). Bad batches get skipped
+# rather than poisoning Muon/AdamW state. Keeps abort_on_*_loss as
+# hard guards for catastrophic NaN/Inf.
+###################################################################
+skip_step_on_spikes: True
+skip_step_interval: 128
+skip_step_scaling_factor: 6.0
+
+###################################################################
+# Held-out validation (added 2026-05-06)
+# Eval split is a separate ArrayRecord shard pattern that NEVER
+# appears in grain_train_files. Cadence matches checkpoint_period.
+# eval_steps=10 batches × 4M tokens/step = 40M tokens per eval pass,
+# ~2 min wall on v5e-64.
+###################################################################
+eval_interval: 2000
+eval_steps: 10
+eval_per_device_batch_size: 8.0       # match train; avoids JIT recompile
+tokenize_eval_data: True              # ArrayRecord stores raw text — grain tokenizes
+eval_data_columns: ['text']
+target_eval_loss: 0.0                 # 0 disables early-stop; never auto-halt
+grain_eval_files: 'gs://pantheon-tpu-training-eu/datasets/nemotron-cc-v2.1-hqs-eval/*.arrayrecord'
+grain_worker_count_eval: 4
+
+###################################################################
+# Data input pipeline
+###################################################################
+# FLAGSHIP DATA RECIPE — 3-stage curriculum (matches SmolLM3 exactly)
+# Phase 4 deliverable: pre-tokenize sources to ArrayRecord and switch to grain.
+#
+# Stage 1 (0 → 410K steps, ~82% of training):
+#   Web 70%: 50% Nemotron-CC-v2.1 (NOT v2 — v2.1 has Qwen3-30B-A3B synthetic
+#            rephrases baked in, beats v2 by ~5pp MMLU; saves us from running
+#            our own BeyondWeb-style rephraser at 30B+ teacher cost)
+#         + 20% Zyda-2 (cross-deduplicated DCLM/FineWeb-Edu/Zyda-1/Dolma blend)
+#   Multilingual 12%: FineWeb2-HQ
+#   Code 12%: 50/50 Stack-Edu + StarCoder2
+#   Math 6%: FineMath4+ + Open-Web-Math
+#
+# Stage 2 (410K → 460K, ~10%):
+#   Web 60% / Code 20% (add MegaMath code split) / Math 12% (add MegaMath-Web-Pro
+#   which beats FineMath-4+ by ≥4% per arxiv 2504.02807) / Multilingual 8%
+#
+# Stage 3 (460K → 500K, ~7.5% — the cooldown / annealing phase, LR also decays):
+#   Web 63% (high-quality subsets only) / Code 24% / Math 13% +
+#   5% reasoning data (OpenThoughts3 + Llama-Nemotron-PT — folds the
+#   "reasoning mid-train" into pretrain cooldown).
+#
+# DATA: Pre-tokenized to GCS as ArrayRecord shards (130M records, 249 train +
+# 5 eval shards). Switched from HF streaming on 2026-05-06 to eliminate per-IP
+# rate-limit jitter. Source: nvidia/Nemotron-CC-v2.1 config=High-Quality-Synthetic
+# (Qwen3-30B synthetic rephrases — the v2.1 quality step over v2).
+dataset_type: grain
+grain_train_files: 'gs://pantheon-tpu-training-eu/datasets/nemotron-cc-v2.1-hqs/*.arrayrecord'
+grain_file_type: 'arrayrecord'
+grain_worker_count: -1                # auto-tune
+grain_packing_type: 'first_fit'
+
+train_data_columns: ['text']
+tokenize_train_data: True             # records contain raw text; grain tokenizes on-the-fly via parallel workers
+enable_data_shuffling: True
+data_shuffle_seed: 0
+init_weights_seed: 0
+
+###################################################################
+# Numerics
+###################################################################
+dtype: "bfloat16"               # activations
+weight_dtype: "float32"         # master weights in fp32
+grad_dtype: "float32"
+matmul_precision: "default"
+cast_logits_to_fp32: True
+
+###################################################################
+# Misc
+###################################################################
+hardware: 'tpu'
+remat_policy: 'minimal'         # less aggressive than 'full' (keep more in HBM
+                                # for speed; 1.34B model has plenty of headroom)
+scan_layers: True
+attention: 'autoselected'
+
+# Profiling — can enable selectively for performance debugging
+profiler: ""
+gcs_metrics: True
+
+###################################################################
+# Things that are NOT set here (using base defaults):
+# - quantization (bf16 throughout for training)
+# - DPO/SFT (this is pretrain only; SFT/APO are separate runs later)
+# - DiLoCo (single-slice, not needed)
+# - MTP (multi-token prediction; could explore as a stretch experiment later)
+# - MoE params (Kisoku v2-1B is dense, num_experts=1)
+###################################################################

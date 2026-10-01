@@ -1,0 +1,91 @@
+# Kisoku v2 1B chat fine-tune (SFT). Model block is copied from ~/kisoku-v2-1b.yml and must stay identical.
+base_config: base.yml
+run_name: "kisoku-v2-1b-sft-001"
+base_output_directory: "gs://kisoku-v2-training/runs/"
+
+# ---- model (identical to pretrain) ----
+base_emb_dim: 2048
+base_num_query_heads: 16
+base_num_kv_heads: 4
+base_mlp_dim: 8192
+base_num_decoder_layers: 22
+head_dim: 128
+mlp_activations: ["silu", "linear"]
+vocab_size: 128256
+decoder_block: "qwen3"
+normalization_layer_epsilon: 1.0e-6
+rope_max_timescale: 5_000_000
+rope_type: "default"
+use_qk_norm: True
+logits_via_embedding: True
+normalize_embedding_logits: False
+enable_dropout: False
+attention_bias: False
+mlp_bias: False
+mtp_num_layers: 0
+tokenizer_type: "huggingface"
+tokenizer_path: "unsloth/Llama-3.2-1B"
+max_target_length: 4096
+
+# ---- start from the final pretrain weights, fresh optimizer, step 0 ----
+load_parameters_path: "gs://kisoku-v2-training/runs/kisoku-v2-1b-pretrain-001/checkpoints/198999/items"
+
+# ---- SFT data ----
+use_sft: True
+sft_train_on_completion_only: True
+packing: True
+# BOS only on the message flagged bos=True (MaxText templates each round separately)
+chat_template: "{% for message in messages %}{% if message['bos'] %}{{ '<|begin_of_text|>' }}{% endif %}{{ '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n' + message['content'] | trim + '<|eot_id|>' }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
+dataset_type: hf
+hf_path: "parquet"
+hf_train_files: "/home/josephrodriguez/sft-data/kisoku-sft-v1/train-*.parquet"
+train_split: "train"
+hf_eval_files: "/home/josephrodriguez/sft-data/kisoku-sft-v1/eval-*.parquet"
+hf_eval_split: "train"
+train_data_columns: ["messages"]
+eval_data_columns: ["messages"]
+enable_data_shuffling: False  # the files already hold 2 pre-shuffled passes
+num_epoch: 2                  # safety margin: steps are sized for 2 passes, the repeat keeps the stream from running dry
+
+# ---- optimizer: same Muon/AdamW split as pretrain, SFT learning rate ----
+opt_type: "muon"
+muon_beta: 0.95
+muon_weight_decay: 0.1
+muon_consistent_rms: 0.2
+adam_b1: 0.9
+adam_b2: 0.95
+adam_eps: 1.0e-8
+adam_weight_decay: 0.1
+adamw_mask: [".*norm.*", ".*bias.*", ".*embed.*"]
+gradient_clipping_threshold: 1.0
+z_loss_multiplier: 0.0
+learning_rate: 5.0e-5
+lr_schedule_type: "cosine"
+learning_rate_final_fraction: 0.0
+warmup_steps_fraction: 0.03
+skip_step_on_spikes: False
+
+# ---- batch / sharding (v4-32: 16 chips) ----
+per_device_batch_size: 2
+gradient_accumulation_steps: 1
+ici_fsdp_parallelism: 16
+
+# ---- precision / memory (same as pretrain) ----
+dtype: "bfloat16"
+weight_dtype: "float32"
+grad_dtype: "float32"
+cast_logits_to_fp32: True
+remat_policy: "minimal"
+scan_layers: True
+
+# ---- checkpoints / eval / logging ----
+enable_checkpointing: True
+async_checkpointing: False
+save_checkpoint_on_completion: True
+checkpoint_period: 1000
+eval_interval: 500
+eval_steps: 20
+eval_per_device_batch_size: 2
+log_period: 50
+gcs_metrics: False
+enable_tensorboard: False

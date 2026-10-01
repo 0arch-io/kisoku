@@ -1,0 +1,14 @@
+[Unit]
+Description=gcsfuse read-only mount of gs://kisoku-v2-training
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p %h/gcsfuse
+ExecStart=/usr/bin/gcsfuse --foreground --key-file=%h/gcs-key.json --implicit-dirs -o ro kisoku-v2-training %h/gcsfuse
+ExecStop=/bin/fusermount -u %h/gcsfuse
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

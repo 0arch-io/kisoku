@@ -1,0 +1,23 @@
+corpus:
+  finemath-4plus               shards   19 records    6,322,750 text     32.2 GB
+  longctx-code-repos           shards   17 records       69,120 text     16.7 GB
+  longctx-pg19                 shards   12 records       28,602 text     11.7 GB
+  longctx-science-pdfs         shards   19 records      145,526 text     19.0 GB
+  megamath-web-pro             shards   24 records   14,294,256 text     50.2 GB
+  nemotron-cc-math-4plus       shards   35 records    8,928,782 text     34.4 GB
+  nemotron-cc-v2.1-hqs         shards  240 records  129,095,211 text    469.4 GB
+  open-web-math                shards   27 records    6,240,400 text     48.6 GB
+  openthoughts3-text           shards   24 records    1,200,000 text     59.7 GB
+  starcoderdata-text           shards  154 records  104,923,829 text    473.0 GB
+  ultra-fineweb-en-text        shards  213 records  111,640,942 text    442.1 GB
+bench                 items probed    any   %any    all   %all  by dataset
+gsm8k                  1319   1319    364  27.60    353  26.76  {'finemath-4plus': 109, 'nemotron-cc-v2.1-hqs': 196, 'megamath-web-pro': 77, 'nemotron-cc-math-4plus': 23, 'open-web-math': 3, 'ultra-fineweb-en-text': 4}
+mmlu                  14042  12331   3533  28.65   2364  19.17  {'finemath-4plus': 361, 'nemotron-cc-math-4plus': 1311, 'megamath-web-pro': 381, 'ultra-fineweb-en-text': 1451, 'open-web-math': 326, 'nemotron-cc-v2.1-hqs': 627, 'starcoderdata-text': 283, 'longctx-science-pdfs': 2, 'openthoughts3-text': 1, 'longctx-pg19': 1}
+arc_easy               2376   2061    430  20.86    414  20.09  {'finemath-4plus': 21, 'nemotron-cc-math-4plus': 12, 'ultra-fineweb-en-text': 381, 'megamath-web-pro': 13, 'nemotron-cc-v2.1-hqs': 42, 'open-web-math': 15}
+arc_challenge          1172   1053    277  26.31    271  25.74  {'finemath-4plus': 14, 'nemotron-cc-math-4plus': 6, 'open-web-math': 98, 'megamath-web-pro': 10, 'nemotron-cc-v2.1-hqs': 22, 'ultra-fineweb-en-text': 168, 'starcoderdata-text': 1}
+hellaswag             10042  10042    694   6.91     19   0.19  {'finemath-4plus': 24, 'ultra-fineweb-en-text': 641, 'nemotron-cc-math-4plus': 14, 'nemotron-cc-v2.1-hqs': 47, 'megamath-web-pro': 1, 'open-web-math': 6, 'starcoderdata-text': 4}
+piqa                   1838   1589     41   2.58      6   0.38  {'finemath-4plus': 4, 'megamath-web-pro': 3, 'nemotron-cc-math-4plus': 3, 'nemotron-cc-v2.1-hqs': 7, 'open-web-math': 7, 'ultra-fineweb-en-text': 32, 'starcoderdata-text': 2}
+winogrande             1267   1267      6   0.47      6   0.47  {'open-web-math': 6}
+humaneval_prompt        164    164     42  25.61     18  10.98  {'megamath-web-pro': 2, 'nemotron-cc-v2.1-hqs': 17, 'starcoderdata-text': 28}
+humaneval_solution      164    127    123  96.85    122  96.06  {'finemath-4plus': 1, 'longctx-code-repos': 1, 'megamath-web-pro': 121, 'nemotron-cc-math-4plus': 2, 'nemotron-cc-v2.1-hqs': 2, 'open-web-math': 1, 'openthoughts3-text': 2, 'starcoderdata-text': 7, 'ultra-fineweb-en-text': 1}
+triviaqa              17944  14227    472   3.32     87   0.61  {'finemath-4plus': 9, 'nemotron-cc-math-4plus': 16, 'nemotron-cc-v2.1-hqs': 58, 'open-web-math': 27, 'ultra-fineweb-en-text': 399, 'longctx-code-repos': 1, 'longctx-pg19': 1, 'megamath-web-pro': 6, 'openthoughts3-text': 1, 'starcoderdata-text': 11}
