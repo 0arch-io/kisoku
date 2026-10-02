@@ -165,16 +165,16 @@ The hits come from homework-help and quiz web pages in Nemotron-CC, Ultra-FineWe
 
 | Benchmark | Kisoku stage 3 (overlap / clean) | Llama 3.2 1B | SmolLM2 1.7B | Qwen2.5 1.5B | Items (overlap / clean) |
 |---|---|---|---|---|---|
-| GSM8K | 10.7 / 16.4 | 7.3 / 5.5 | 31.0 / 29.7 | 64.8 / 61.3 | 364 / 955 |
+| GSM8K | 13.7 / 15.9 | 7.1 / 5.3 | 31.0 / 29.6 | 63.2 / 59.8 | 364 / 955 |
 | MMLU | 30.8 / 33.2 | 30.5 / 30.9 | 45.5 / 50.5 | 53.8 / 62.4 | 3,406 / 8,127 |
 | ARC-Easy | 72.1 / 70.8 | 68.4 / 65.8 | 79.1 / 77.5 | 77.4 / 74.5 | 430 / 1,946 |
 | ARC-Challenge | 40.1 / 37.3 | 34.7 / 30.5 | 47.7 / 43.4 | 43.0 / 40.6 | 277 / 895 |
 | HellaSwag | 43.2 / 44.3 | 45.0 / 48.2 | 52.7 / 53.3 | 49.4 / 50.1 | 694 / 9,348 |
 | PIQA | 90.2 / 74.0 | 92.7 / 74.9 | 97.6 / 76.6 | 97.6 / 75.1 | 41 / 1,797 |
 
-Kisoku does not score higher on overlapping items on GSM8K, MMLU or HellaSwag. On the clean GSM8K subset it scores 16.4 against Llama's 5.5. On ARC the overlapping items score 1 to 3 points higher for every model, including the baselines, which suggests those items are simply easier. The 41 overlapping PIQA items are easy for every model (90 to 98%). Stage 1 on GSM8K: 5.2 overlapping against 6.4 clean.
+Kisoku does not score higher on overlapping items on GSM8K, MMLU or HellaSwag. On the clean GSM8K subset it scores 15.9 against Llama's 5.3. On ARC the overlapping items score 1 to 3 points higher for every model, including the baselines, which suggests those items are simply easier. The 41 overlapping PIQA items are easy for every model (90 to 98%). Stage 1 on GSM8K: 4.9 overlapping against 6.9 clean.
 
-Two details on this table. First, it uses per-sample accuracy (plain accuracy, not the length-normalized metric in section 1), so the HellaSwag and ARC figures are lower than in the main table. Second, the Kisoku GSM8K numbers here come from the earlier runs that still had the repetition penalty on (section 8), so they sit slightly below the clean numbers; the direction of the finding does not depend on that. [TBD: redo the split with the clean generation logs.] Gemma 3 1B has no per-sample logs here, and the stage 1 MMLU split is missing.
+One detail on this table: it uses per-sample accuracy (plain accuracy, not the length-normalized metric in section 1), so the HellaSwag and ARC figures are lower than in the main table. GSM8K uses the clean generation logs. Gemma 3 1B has no per-sample logs here, and the stage 1 MMLU split is missing.
 
 **Caveat.** This audit detects only exact verbatim matches of 80-character probes. It does not detect paraphrases, translations, reformatted copies, or answer-only leakage. A clean result here means "no evidence of verbatim leakage driving the scores", not "no contamination". I also have not yet run the same check on the supervised fine-tuning datasets. [TBD: SFT data check against the same probes.]
 
@@ -316,7 +316,7 @@ Every placeholder in this draft:
 4. Licences for Nemotron-CC, Ultra-FineWeb, StarCoder, FineMath, MegaMath, OpenWebMath, OpenThoughts3 and The Stack v1 long-context subset, plus redistribution status.
 5. Confirm which Nemotron-CC v2.1 subset was used and its token share; final decision on the tokenizer licence wording.
 6. Bootstrap confidence intervals for all benchmark cells.
-7. Contamination split recomputed with clean (no repetition penalty) generation logs; stage 1 MMLU split; Gemma split.
+7. Contamination split for stage 1 MMLU and Gemma (no per-sample logs yet).
 8. Contamination check of the supervised fine-tuning data.
 9. Phase B and Phase C final loss, steps, time and checkpoints.
 10. RULER: 16K, 32K, 64K, 128K tables for final checkpoints and all baselines (and Qwen3.5 2B at 8K).

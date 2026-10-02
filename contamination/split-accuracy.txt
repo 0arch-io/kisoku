@@ -1,10 +1,10 @@
 bench          model          n_hit acc_hit  n_cln acc_cln     gap
-gsm8k          kisoku-s3        728    10.7   1910    16.4    -5.7
-gsm8k          kisoku-s1        728     5.2   1910     6.4    -1.2
-gsm8k          llama-3.2-1b     728     7.3   1910     5.5    +1.7
+gsm8k          kisoku-s3        364    13.7    955    15.9    -2.2
+gsm8k          kisoku-s1        364     4.9    955     6.9    -2.0
+gsm8k          llama-3.2-1b     364     7.1    955     5.3    +1.8
 gsm8k          gemma-3-1b    no samples
-gsm8k          smollm2-1.7b     728    31.0   1910    29.7    +1.4
-gsm8k          qwen2.5-1.5b     728    64.8   1910    61.3    +3.5
+gsm8k          smollm2-1.7b     364    31.0    955    29.6    +1.4
+gsm8k          qwen2.5-1.5b     364    63.2    955    59.8    +3.4
 mmlu           kisoku-s3       3406    30.8   8127    33.2    -2.4
 mmlu           kisoku-s1     no samples
 mmlu           llama-3.2-1b    3406    30.5   8127    30.9    -0.4

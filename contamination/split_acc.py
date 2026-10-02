@@ -14,9 +14,14 @@ print('%-14s %-13s %6s %7s %6s %7s %7s'%('bench','model','n_hit','acc_hit','n_cl
 for b,(d,pat,met) in sets.items():
     for m in models:
         a=collections.defaultdict(list)
-        for f in glob.glob(f'{R}/{m}-{d}/*/samples_{pat}_*.jsonl'):
+        # prefer the clean (no repetition penalty) rerun when one exists, and read only the newest run of each task
+        dd = f'{m}-{d}-clean' if glob.glob(f'{R}/{m}-{d}-clean/*/samples_*.jsonl') else f'{m}-{d}'
+        files = {}
+        for f in sorted(glob.glob(f'{R}/{dd}/*/samples_{pat}_*.jsonl')): files[os.path.basename(f).rsplit('_', 1)[0]] = f
+        for f in files.values():
             for line in open(f):
                 s=json.loads(line); k=key(b,s)
+                if b=='gsm8k' and s.get('filter') not in (None,'strict-match'): continue   # gsm8k logs every sample once per filter
                 if b=='mmlu' and k not in mp: continue   # unprobed (short) questions left out of both groups
                 a[k in hit[b]].append(float(s[met]))
         if not a: print('%-14s %-13s no samples'%(b,m)); continue
