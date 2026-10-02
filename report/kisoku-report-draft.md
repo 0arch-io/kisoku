@@ -176,7 +176,7 @@ Kisoku does not score higher on overlapping items on GSM8K, MMLU or HellaSwag. O
 
 One detail on this table: it uses per-sample accuracy (plain accuracy, not the length-normalized metric in section 1), so the HellaSwag and ARC figures are lower than in the main table. GSM8K uses the clean generation logs. Gemma 3 1B has no per-sample logs here, and the stage 1 MMLU split is missing.
 
-**Caveat.** This audit detects only exact verbatim matches of 80-character probes. It does not detect paraphrases, translations, reformatted copies, or answer-only leakage. A clean result here means "no evidence of verbatim leakage driving the scores", not "no contamination". I also have not yet run the same check on the supervised fine-tuning datasets. [TBD: SFT data check against the same probes.]
+**Caveat.** This audit detects only exact verbatim matches of 80-character probes. It does not detect paraphrases, translations, reformatted copies, or answer-only leakage. A clean result here means "no evidence of verbatim leakage driving the scores", not "no contamination". I ran the same probes over the 34,875 generated fine-tuning examples: no GSM8K, ARC, HellaSwag, PIQA, WinoGrande, HumanEval or TriviaQA item appears, and 3 MMLU items do (competition math problems, in 4 examples), which I remove before fine-tuning. [TBD: the same check for the public datasets added to the fine-tuning mix.]
 
 ## 7. Long context
 
@@ -317,7 +317,7 @@ Every placeholder in this draft:
 5. Confirm which Nemotron-CC v2.1 subset was used and its token share; final decision on the tokenizer licence wording.
 6. Bootstrap confidence intervals for all benchmark cells.
 7. Contamination split for stage 1 MMLU and Gemma (no per-sample logs yet).
-8. Contamination check of the supervised fine-tuning data.
+8. Contamination check of the public datasets added to the fine-tuning mix.
 9. Phase B and Phase C final loss, steps, time and checkpoints.
 10. RULER: 16K, 32K, 64K, 128K tables for final checkpoints and all baselines (and Qwen3.5 2B at 8K).
 11. Held-out long-context results (BABILong, LongBench v2), passkey and perplexity curves with YaRN to about 100K and 128K.
