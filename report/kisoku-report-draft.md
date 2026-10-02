@@ -195,20 +195,20 @@ Answers come from the final document text, not from the planted data alone, and 
 
 I want to be clear about what this means for evaluation. These tasks resemble parts of RULER (needle lookup, counting, variable tracking). A model trained on them should do better on RULER partly because of format familiarity, and I will say so wherever I report Phase C numbers. To keep the claim honest I plan to report a held-out suite alongside RULER (BABILong and LongBench v2, both available in the harness) and to report every task and length, not just the average. [TBD: held-out long-context results.]
 
-**Preliminary RULER results.** The harness's built-in RULER (13 tasks), 100 samples per task at 4K and 8K, greedy decoding with no repetition penalty, 128-token generation cap, average over 13 tasks. All models ran in the same setup.
+**Preliminary RULER results (Phase A checkpoint).** The harness's built-in RULER (13 tasks), 100 samples per task at 4K and 8K and 50 at 16K and 32K, greedy decoding with no repetition penalty, 128-token generation cap, average over 13 tasks. All models ran in the same setup.
 
-| Model | 4K | 8K |
-|---|---|---|
-| Qwen3.5 2B base | 91.6 | [TBD] |
-| Qwen3 1.7B base | 89.4 | 84.2 |
-| Qwen3.5 0.8B base | 86.7 | 83.0 |
-| Qwen3 0.6B base | 84.2 | 73.5 |
-| Llama 3.2 1B | 73.5 | 67.4 |
-| **Kisoku (Phase A, step 2500)** | **71.9** | **59.3** |
-| LFM2.5 1.2B | 63.1 | 54.6 |
-| Gemma 3 1B | 59.6 | 43.8 |
+| Model | 4K | 8K | 16K | 32K |
+|---|---|---|---|---|
+| Qwen3.5 2B base | 91.6 | 89.7 | 86.8 | 83.6 |
+| Qwen3.5 0.8B base | 86.7 | 83.0 | 79.2 | 74.2 |
+| Qwen3 1.7B base | 89.4 | 84.2 | 78.3 | 72.3 |
+| Qwen3 0.6B base | 84.2 | 73.5 | 68.7 | 59.5 |
+| Llama 3.2 1B | 73.5 | 67.4 | 61.9 | 56.7 |
+| **Kisoku (Phase A, step 2500)** | **71.9** | **59.3** | **54.9** | **41.0** |
+| LFM2.5 1.2B | 63.1 | 54.6 | 43.1 | 33.8 |
+| Gemma 3 1B | 59.6 | 43.8 | 35.3 | 27.6 |
 
-At short lengths Kisoku trails the Qwen3 family by about 12 to 25 points and sits below Llama 3.2 1B (71.9 against 73.5 at 4K, 59.3 against 67.4 at 8K), above LFM2.5 and Gemma 3 1B. Its drop from 4K to 8K (12.6 points) is larger than Llama's (6.1) and similar to Qwen3 0.6B's (10.7); I do not yet know why. I do not expect a long-context headline from the 4K and 8K numbers. The case for the long-context work rests on 64K and beyond, where most competing small models are out of their native range; that is a hypothesis until I measure it.
+Kisoku is sixth of eight at every length: behind the four Qwen models and Llama 3.2 1B, ahead of LFM2.5 and Gemma 3 1B. The gap to Llama is 1.6 points at 4K and 15.7 at 32K. Kisoku loses most between 4K and 8K (12.6 points) and again between 16K and 32K (13.9), where this checkpoint is at the edge of its trained range and had not finished Phase A. I do not expect a long-context headline from these numbers. The case for the long-context work rests on 64K and beyond, where the 32K-native models are out of range; that is a hypothesis until I measure it on the final checkpoints.
 
 Part of the gap is format, not ability. In diagnostic runs the model often stops immediately on counting tasks or rambles ("Answer: Answer:") on question tasks, which looks like base-model format habit that instruction data should fix. A forced minimum of two new tokens only added 0.8 points at 4K (71.5 against 70.7 on 30 samples), so I do not use it.
 
@@ -224,7 +224,7 @@ Part of the gap is format, not ability. In diagnostic runs the model often stops
 YaRN carried retrieval to almost twice the trained length, which is the same mechanism planned for 64K to 128K. It also appears to hurt short prompts (2 of 5 at 16K), a known weakness of static YaRN, so the scaled config will probably ship as a separate long-context option. Five trials per cell is a rehearsal, not a result. A 116K-token prompt peaked at 15 GB in bfloat16, so 128K fits on one 24 GB card.
 
 **Planned and missing.**
-- [TBD: RULER at 16K and 32K (50 samples per task), and 64K and 128K, for the final Phase B and Phase C checkpoints and the same baselines]
+- [TBD: RULER at 4K to 32K for the final Phase B and Phase C checkpoints, and at 64K and 128K for those checkpoints and the baselines]
 - [TBD: passkey retrieval and perplexity curves at 32K, 64K and about 100K, with YaRN]
 - [TBD: Granite 4.0 1B and Falcon-H1 1.5B baselines, which publish no RULER numbers]
 - [TBD: per-task breakdown and confidence intervals]
@@ -319,7 +319,7 @@ Every placeholder in this draft:
 7. Contamination split for stage 1 MMLU and Gemma (no per-sample logs yet).
 8. Contamination check of the public datasets added to the fine-tuning mix.
 9. Phase B and Phase C final loss, steps, time and checkpoints.
-10. RULER: 16K, 32K, 64K, 128K tables for final checkpoints and all baselines (and Qwen3.5 2B at 8K).
+10. RULER: 4K to 128K for the final Phase B and Phase C checkpoints, and 64K and 128K for all baselines.
 11. Held-out long-context results (BABILong, LongBench v2), passkey and perplexity curves with YaRN to about 100K and 128K.
 12. Granite 4.0 1B and Falcon-H1 1.5B long-context baselines.
 13. RULER per-task breakdown and confidence intervals.
