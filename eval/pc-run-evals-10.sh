@@ -21,6 +21,7 @@ run() { local name=$1 pre=$2 len=$3 lim=$4 out="$R/$1-ruler-$3"
 }
 for spec in "4096 100" "8192 100" "16384 50" "32768 50"; do set -- $spec
   run granite-4.0-1b "ibm-granite/granite-4.0-1b-base" $1 $2
-  run falcon-h1-1.5b "tiiuae/Falcon-H1-1.5B-Base" $1 $2
+  # Falcon-H1 1.5B dropped 2026-10-02: without the mamba_ssm / causal_conv1d kernels transformers falls back to a reference
+  # implementation that took 12.5 s/sample and 23.6 GB at 4K. Needs those kernels built for this torch before it can be compared.
 done
 echo "=== BATCH 10 DONE $(date -u)" >> $LOG
