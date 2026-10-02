@@ -1,10 +1,10 @@
 # Kisoku 1.6B: A Solo, From-Scratch Pretrain on a Free TPU Grant
 
-**Joseph Rodriguez, 0ARCH.** Draft 1, written 2026-10-01. Long-context training is still running, so sections 7 and 14 contain placeholders.
+**Joseph Rodriguez, 0ARCH.** Draft 2, 2026-10-01. Long-context training is still running, so sections 7 and 14 contain placeholders.
 
 ## Abstract
 
-Kisoku 1.6B is an open base language model pretrained from scratch by one person on a TPU v4-32 from Google's TPU Research Cloud (TRC), with a single RTX 4090 used for evaluation. The model is a Qwen3-style decoder (22 layers, 2048 embedding width) using the Llama 3.2 tokenizer. It saw roughly 0.5 trillion tokens in three pretraining stages. On a 10-benchmark suite, run through the same harness on the same machine, it matches Meta's Llama 3.2 1B, with five wins each, while using about 18 times less training data (Llama 3.2 1B is reported at about 9 trillion tokens). The comparison has caveats that I state up front: Kisoku has 1.6B parameters against Llama's 1.24B, Llama 3.2 1B was distilled from larger models while Kisoku had no teacher, and Qwen2.5 1.5B and SmolLM2 1.7B are ahead of both on most tests. I also report a contamination audit of the pretraining corpus against the test sets (verbatim overlap exists, but accuracy on the clean subset is the same or higher), the recipe, and a candid log of what went wrong, including an evaluation bug that understated Kisoku's generation scores. A long-context extension to 64K tokens (with a planned 128K via YaRN) is in progress. Only preliminary 4K results exist, and I present them as such. Weights, intermediate checkpoints, training and evaluation code, and data manifests will be released.
+Kisoku 1.6B is an open base language model pretrained from scratch by one person on a TPU v4-32 from Google's TPU Research Cloud (TRC), with a single RTX 4090 used for evaluation. The model is a Qwen3-style decoder (22 layers, 2048 embedding width) using the Llama 3.2 tokenizer. It saw roughly 0.5 trillion tokens in three pretraining stages. On a 10-benchmark suite, run through the same harness on the same machine, it matches Meta's Llama 3.2 1B, with five wins each, while using about 18 times less training data (Llama 3.2 1B is reported at about 9 trillion tokens). The comparison has caveats that I state up front: Kisoku has 1.6B parameters against Llama's 1.24B, Llama 3.2 1B was distilled from larger models while Kisoku had no teacher, and Qwen2.5 1.5B and SmolLM2 1.7B are ahead of both on most tests. I also report a contamination audit of the pretraining corpus against the test sets (verbatim overlap exists, but accuracy on the clean subset is the same or higher), the recipe, and a candid log of what went wrong, including an evaluation bug that understated Kisoku's generation scores. A long-context extension to 64K tokens (with a planned 128K via YaRN) is in progress. Only preliminary 4K and 8K results exist, and I present them as such. Weights, intermediate checkpoints, training and evaluation code, and data manifests will be released.
 
 ## 1. Summary of results
 
@@ -48,15 +48,16 @@ Kisoku uses a Qwen3-style decoder block, implemented in MaxText and trained in J
 - Layers: 22
 - Embedding width: 2048
 - MLP width: 8192
-- Key/value heads: 4 (grouped-query attention)
+- Attention heads: 16 query heads, 4 key/value heads (grouped-query attention), head dimension 128
+- Input and output embeddings are tied
 - Vocabulary: 128,256 (the Llama 3.2 tokenizer, taken from the unsloth/Llama-3.2-1B copy)
 - RoPE base (theta): 5,000,000
 - Pretraining context: 4096 tokens; extended to 32K and then 64K in the long-context phases
 - Parameters: 1.6B (the "1B" in some of my run names is a leftover; the exported model is 1.6B)
 
-[TBD: query head count and head dimension, whether input and output embeddings are tied, and an exact parameter count by component.]
+[TBD: exact parameter count by component.]
 
-I kept the RoPE base at 5M for the long-context phases. A minimum-theta table I consulted during planning puts the requirement for 64K at about 2.1M, so 5M leaves margin. The planned route to 128K is YaRN with factor 2 applied at inference over a 64K-trained model; that part is not yet tested.
+I kept the RoPE base at 5M for the long-context phases. A minimum-theta table I consulted during planning puts the requirement for 64K at about 2.1M, so 5M leaves margin. The planned route to 128K is YaRN with factor 2 applied at inference over a 64K-trained model. I rehearsed that step on the 32K-trained Phase A checkpoint (section 7).
 
 Export to Hugging Face format goes through a MaxText conversion that I wrapped with model-shape overrides, because MaxText's model name field only accepts a fixed set of names. I checked the export against the training framework in float32: argmax agreement was 100% and the maximum logit difference was 0.04. For base use, the exported end-of-sequence token is reset to the base end-of-text token (128001).
 
@@ -153,7 +154,7 @@ The hits come from homework-help and quiz web pages in Nemotron-CC, Ultra-FineWe
 
 | Benchmark | Kisoku stage 3 (overlap / clean) | Llama 3.2 1B | SmolLM2 1.7B | Qwen2.5 1.5B | Items (overlap / clean) |
 |---|---|---|---|---|---|
-| GSM8K | 10.7 / 16.4 | 7.3 / 5.5 | 31.0 / 29.7 | 64.8 / 61.3 | 728 / 1,910 |
+| GSM8K | 10.7 / 16.4 | 7.3 / 5.5 | 31.0 / 29.7 | 64.8 / 61.3 | 364 / 955 |
 | MMLU | 30.8 / 33.2 | 30.5 / 30.9 | 45.5 / 50.5 | 53.8 / 62.4 | 3,406 / 8,127 |
 | ARC-Easy | 72.1 / 70.8 | 68.4 / 65.8 | 79.1 / 77.5 | 77.4 / 74.5 | 430 / 1,946 |
 | ARC-Challenge | 40.1 / 37.3 | 34.7 / 30.5 | 47.7 / 43.4 | 43.0 / 40.6 | 277 / 895 |
@@ -189,16 +190,27 @@ I want to be clear about what this means for evaluation. These tasks resemble pa
 |---|---|---|
 | Qwen3.5 2B base | 91.6 | [TBD] |
 | Qwen3 1.7B base | 89.4 | 84.2 |
-| Qwen3.5 0.8B base | 86.7 | [TBD] |
+| Qwen3.5 0.8B base | 86.7 | 83.0 |
 | Qwen3 0.6B base | 84.2 | 73.5 |
 | Llama 3.2 1B | 73.5 | 67.4 |
-| **Kisoku (Phase A, step 2500)** | **71.9** | [TBD: clean rerun in progress] |
+| **Kisoku (Phase A, step 2500)** | **71.9** | **59.3** |
 | LFM2.5 1.2B | 63.1 | 54.6 |
 | Gemma 3 1B | 59.6 | 43.8 |
 
-At short lengths Kisoku trails the Qwen3 family by about 12 to 20 points and sits slightly below Llama 3.2 1B (71.9 against 73.5), above LFM2.5 and Gemma 3 1B. I do not expect a long-context headline from the 4K and 8K numbers. The case for the long-context work rests on 64K and beyond, where most competing small models are out of their native range; that is a hypothesis until I measure it.
+At short lengths Kisoku trails the Qwen3 family by about 12 to 25 points and sits below Llama 3.2 1B (71.9 against 73.5 at 4K, 59.3 against 67.4 at 8K), above LFM2.5 and Gemma 3 1B. Its drop from 4K to 8K (12.6 points) is larger than Llama's (6.1) and similar to Qwen3 0.6B's (10.7); I do not yet know why. I do not expect a long-context headline from the 4K and 8K numbers. The case for the long-context work rests on 64K and beyond, where most competing small models are out of their native range; that is a hypothesis until I measure it.
 
 Part of the gap is format, not ability. In diagnostic runs the model often stops immediately on counting tasks or rambles ("Answer: Answer:") on question tasks, which looks like base-model format habit that instruction data should fix. A forced minimum of two new tokens only added 0.8 points at 4K (71.5 against 70.7 on 30 samples), so I do not use it.
+
+**YaRN rehearsal.** Before the 64K model exists, I rehearsed the last step on the Phase A checkpoint, which was trained to 32K: a passkey test (a five-digit key hidden in filler text, five depths per length), with the plain config and with YaRN factor 2 over a 32,768 base.
+
+| Prompt length | Plain | YaRN x2 |
+|---|---|---|
+| 16K | 4 of 5 | 2 of 5 |
+| 30K | 4 of 5 | 5 of 5 |
+| 47K | 2 of 5 | 5 of 5 |
+| 60K | 0 of 5 | 5 of 5 |
+
+YaRN carried retrieval to almost twice the trained length, which is the same mechanism planned for 64K to 128K. It also appears to hurt short prompts (2 of 5 at 16K), a known weakness of static YaRN, so the scaled config will probably ship as a separate long-context option. Five trials per cell is a rehearsal, not a result. A 116K-token prompt peaked at 15 GB in bfloat16, so 128K fits on one 24 GB card.
 
 **Planned and missing.**
 - [TBD: RULER at 16K and 32K (50 samples per task), and 64K and 128K, for the final Phase B and Phase C checkpoints and the same baselines]
@@ -230,11 +242,7 @@ This section is long on purpose. Each item cost time, and most are the kind of t
 - The harness's RULER needs two extra Python packages and tokenizer data; my first RULER batch failed in seconds on all five models for lack of them.
 - Long 4090 jobs must run under tmux, not in a foreground ssh session, which dropped.
 
-**7. A generation config silently overrode the harness, and the repetition penalty.** My Hugging Face exports of Kisoku shipped chat sampling defaults in `generation_config.json` (sampling on, temperature 0.7, top-p 0.9, repetition penalty 1.1), written by my own conversion script. The harness forces greedy decoding, but it did not remove the repetition penalty, and none of the baselines had one. The penalty discourages copying tokens from the prompt, so it hurt every Kisoku generation score (GSM8K, HumanEval, BBH, TriviaQA and RULER) and none of the log-likelihood scores (MMLU, ARC, HellaSwag, PIQA, WinoGrande). I found it on 2026-10-01 while diagnosing why the model answered with an empty string on a word-counting task. A controlled A/B on the Phase A checkpoint at 4K (30 samples per task) moved RULER from 63.5 to 70.7. Counting-task accuracy went from 4.0 to 41.3, and the "empty answer" had mostly been the penalty pushing the end-of-sequence token to the top. On the short generation benchmarks the effect was small: GSM8K 14.6 to 15.3, HumanEval unchanged at 13.4, BBH unchanged at 29.2. I reran every Kisoku generation evaluation with a base-only generation config and report those. The numbers I had briefly written down before the fix (RULER 67.0 at 4K and 56.8 at 8K) were wrong and are discarded. The conversion script now needs to stop writing sampling defaults into base exports. [TBD: confirm the conversion script is fixed in the released code.] Even without the penalty, the top token after a counting prompt is the end-of-text token (probability 0.20), which I attribute to base-model format habit.
-
-**8. Smaller conversion and tooling traps.** The conversion script hardcodes a 4096 maximum position count, so long-context exports needed that config value patched. Newer transformers versions write RoPE settings only in a nested field and write a tokenizer class name that older readers and llama.cpp cannot load, so my finalize step writes the top-level RoPE theta and a plain tokenizer class. Launching long jobs over ssh needed `systemd-run` to return immediately (a plain background launch hung, and the tool re-ran the whole command about 7 minutes later, which started a second sampler that truncated the log). A sampling script that printed all output and then hung on exit left training idle for about 2 hours 15 minutes.
-
-**9. Preview model behavior.** The chat preview (supervised fine-tune of the stage 1 base, published 2026-09-22) confidently invented capabilities ("news, weather updates"), described a cosmetic laser treatment as nasal surgery, and agreed with and embellished a user's correction instead of admitting the error. The next fine-tune will include capability-honesty, "I don't know" and correction-handling examples.
+**7. A generation config silently overrode the harness, and the repetition penalty.** My Hugging Face exports of Kisoku shipped chat sampling defaults in `generation_config.json` (sampling on, temperature 0.7, top-p 0.9, repetition penalty 1.1), written by my own conversion script. The harness forces greedy decoding, but it did not remove the repetition penalty, and none of the baselines had one. The penalty discourages copying tokens from the prompt, so it hurt every Kisoku generation score (GSM8K, HumanEval, BBH, TriviaQA and RULER) and none of the log-likelihood scores (MMLU, ARC, HellaSwag, PIQA, WinoGrande). I found it on 2026-10-01 while diagnosing why the model answered with an empty string on a word-counting task. A controlled A/B on the Phase A checkpoint at 4K (30 samples per task) moved RULER from 63.5 to 70.7. Counting-task accuracy went from 4.0 to 41.3, and the "empty answer" had mostly been the penalty pushing the end-of-sequence token to the top. On the short generation benchmarks the effect was small: GSM8K 14.6 to 15.3, HumanEval unchanged at 13.4, BBH unchanged at 29.2. I reran every Kisoku generation evaluation with a base-only generation config and report those. The numbers I had briefly written down before the fix (RULER 67.0 at 4K and 56.8 at 8K) were wrong and are discarded. The base export scripts now overwrite the generation config with token ids only. Even without the penalty, the top token after a counting prompt is the end-of-text token (probability 0.20), which I attribute to base-model format habit.
 
 ## 9. Cost and compute
 
@@ -292,22 +300,20 @@ This work was made possible by Google's TPU Research Cloud, which provided the T
 Every placeholder in this draft:
 
 1. Exact total pretraining token count, and the score-versus-tokens figure.
-2. Query head count, head dimension, embedding tying and exact parameter count.
+2. Exact parameter count by component.
 3. Muon hyperparameters, weight decay, clipping, stage 1 warmup length.
-4. Exact stage 1 math weights, stage 2 weights, and confirmed final stage 3 weights.
-5. Licences for Nemotron-CC, Ultra-FineWeb, StarCoder, FineMath, MegaMath, OpenWebMath, OpenThoughts3 and The Stack v1 long-context subset, plus redistribution status.
-6. Provenance of OpenThoughts3 reasoning traces (affects the "no teacher" wording).
-7. Bootstrap confidence intervals for all benchmark cells.
-8. Contamination split recomputed with clean (no repetition penalty) generation logs; stage 1 MMLU split; Gemma split.
-9. Contamination check of the supervised fine-tuning data.
-10. Phase B and Phase C final loss, steps, time and checkpoints.
-11. RULER: Kisoku clean 8K, and 16K, 32K, 64K, 128K tables for final checkpoints and all baselines (including Qwen3.5 0.8B and 2B at 8K).
-12. Held-out long-context results (BABILong, LongBench v2), passkey and perplexity curves with YaRN to about 100K and 128K.
-13. Granite 4.0 1B and Falcon-H1 1.5B long-context baselines.
-14. RULER per-task breakdown and confidence intervals.
-15. Re-run the 10-benchmark suite on the final long-context checkpoint to measure short-context regression.
-16. Confirm the conversion script no longer writes sampling defaults into base exports.
-17. Verify the training-token figures for baselines against primary sources, and add formal citations (SmolLM3, ProLong, Olmo 3, arXiv 2412.18860, and others).
-18. Total TPU hours or chip-hours, and total out-of-pocket dollar cost.
-19. All release links and the final weights licence.
-20. Figures: loss curves across stages, score versus tokens.
+4. Licences for Nemotron-CC, Ultra-FineWeb, StarCoder, FineMath, MegaMath, OpenWebMath, OpenThoughts3 and The Stack v1 long-context subset, plus redistribution status.
+5. Provenance of OpenThoughts3 reasoning traces (affects the "no teacher" wording).
+6. Bootstrap confidence intervals for all benchmark cells.
+7. Contamination split recomputed with clean (no repetition penalty) generation logs; stage 1 MMLU split; Gemma split.
+8. Contamination check of the supervised fine-tuning data.
+9. Phase B and Phase C final loss, steps, time and checkpoints.
+10. RULER: 16K, 32K, 64K, 128K tables for final checkpoints and all baselines (and Qwen3.5 2B at 8K).
+11. Held-out long-context results (BABILong, LongBench v2), passkey and perplexity curves with YaRN to about 100K and 128K.
+12. Granite 4.0 1B and Falcon-H1 1.5B long-context baselines.
+13. RULER per-task breakdown and confidence intervals.
+14. Re-run the 10-benchmark suite on the final long-context checkpoint to measure short-context regression.
+15. Verify the training-token figures for baselines against primary sources, and add formal citations (SmolLM3, ProLong, Olmo 3, arXiv 2412.18860, and others).
+16. Total TPU hours or chip-hours, and total out-of-pocket dollar cost.
+17. All release links and the final weights licence.
+18. Figures: loss curves across stages, score versus tokens.
