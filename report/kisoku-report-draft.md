@@ -203,12 +203,13 @@ I want to be clear about what this means for evaluation. These tasks resemble pa
 | Qwen3.5 0.8B base | 86.7 | 83.0 | 79.2 | 74.2 |
 | Qwen3 1.7B base | 89.4 | 84.2 | 78.3 | 72.3 |
 | Qwen3 0.6B base | 84.2 | 73.5 | 68.7 | 59.5 |
+| Granite 4.0 1B base (1.6B, 128K native) | 85.3 | 77.5 | 71.6 | 60.7 |
 | Llama 3.2 1B | 73.5 | 67.4 | 61.9 | 56.7 |
 | **Kisoku (Phase A, step 2500)** | **71.9** | **59.3** | **54.9** | **41.0** |
 | LFM2.5 1.2B | 63.1 | 54.6 | 43.1 | 33.8 |
 | Gemma 3 1B | 59.6 | 43.8 | 35.3 | 27.6 |
 
-Kisoku is sixth of eight at every length: behind the four Qwen models and Llama 3.2 1B, ahead of LFM2.5 and Gemma 3 1B. The gap to Llama is 1.6 points at 4K and 15.7 at 32K. Kisoku loses most between 4K and 8K (12.6 points) and again between 16K and 32K (13.9), where this checkpoint is at the edge of its trained range and had not finished Phase A. I do not expect a long-context headline from these numbers. The case for the long-context work rests on 64K and beyond, where the 32K-native models are out of range; that is a hypothesis until I measure it on the final checkpoints.
+Kisoku is seventh of nine at every length: behind the four Qwen models, IBM's Granite 4.0 1B (a same-size 1.6B model with a native 128K context) and Llama 3.2 1B, ahead of LFM2.5 and Gemma 3 1B. The gap to Llama is 1.6 points at 4K and 15.7 at 32K. Kisoku loses most between 4K and 8K (12.6 points) and again between 16K and 32K (13.9), where this checkpoint is at the edge of its trained range and had not finished Phase A. I do not expect a long-context headline from these numbers. The case for the long-context work rests on 64K and beyond, where the 32K-native models are out of range; that is a hypothesis until I measure it on the final checkpoints.
 
 Part of the gap is format, not ability. In diagnostic runs the model often stops immediately on counting tasks or rambles ("Answer: Answer:") on question tasks, which looks like base-model format habit that instruction data should fix. A forced minimum of two new tokens only added 0.8 points at 4K (71.5 against 70.7 on 30 samples), so I do not use it.
 
@@ -226,7 +227,7 @@ YaRN carried retrieval to almost twice the trained length, which is the same mec
 **Planned and missing.**
 - [TBD: RULER at 4K to 32K for the final Phase B and Phase C checkpoints, and at 64K and 128K for those checkpoints and the baselines]
 - [TBD: passkey retrieval and perplexity curves at 32K, 64K and about 100K, with YaRN]
-- [TBD: Granite 4.0 1B and Falcon-H1 1.5B baselines, which publish no RULER numbers]
+- [TBD: Falcon-H1 1.5B baseline; it needs the mamba_ssm and causal_conv1d kernels, without which the harness falls back to a reference implementation that is too slow to run]
 - [TBD: per-task breakdown and confidence intervals]
 
 Published long-context numbers from other sources (for example, third-party RULER results for Qwen3.5 2B and for a Llama 3.2 1B research fine-tune, arXiv 2412.18860) use different harnesses and are not comparable to mine, so I will rerun every baseline instead of quoting them. For models whose native range is 32K, I will label scores beyond 32K as extrapolated.
@@ -321,7 +322,7 @@ Every placeholder in this draft:
 9. Phase B and Phase C final loss, steps, time and checkpoints.
 10. RULER: 4K to 128K for the final Phase B and Phase C checkpoints, and 64K and 128K for all baselines.
 11. Held-out long-context results (BABILong, LongBench v2), passkey and perplexity curves with YaRN to about 100K and 128K.
-12. Granite 4.0 1B and Falcon-H1 1.5B long-context baselines.
+12. Falcon-H1 1.5B long-context baseline (needs the Mamba kernels).
 13. RULER per-task breakdown and confidence intervals.
 14. Re-run the 10-benchmark suite on the final long-context checkpoint to measure short-context regression.
 15. Verify the training-token figures for baselines against primary sources, and add formal citations (SmolLM3, ProLong, Olmo 3, arXiv 2412.18860, and others).
