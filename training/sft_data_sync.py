@@ -3,9 +3,10 @@ Verifies each file's md5 against the bucket so a bad copy can't slip into traini
 import base64, glob, hashlib, os, sys
 import gcsfs
 
-REMOTE = "kisoku-v2-training/sft/kisoku-sft-v1"
-BUILD = os.path.expanduser("~/sft-build/kisoku-sft-v1")
-LOCAL = os.path.expanduser("~/sft-data/kisoku-sft-v1")
+SET = os.environ.get("SFT_SET", "kisoku-sft-v2")  # v1 = preview set, v2 = final set (built on the Mac, uploaded with gsutil)
+REMOTE = f"kisoku-v2-training/sft/{SET}"
+BUILD = os.path.expanduser(f"~/sft-build/{SET}")
+LOCAL = os.path.expanduser(f"~/sft-data/{SET}")
 
 fs = gcsfs.GCSFileSystem(token=os.path.expanduser("~/gcs-key.json"))
 
