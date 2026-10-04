@@ -1,52 +1,52 @@
 {
- "train_examples_per_pass": 350896,
+ "train_examples_per_pass": 350868,
  "eval_examples": 2000,
- "train_tokens_per_pass": 216414329,
- "mean_tokens": 616.7477799689937,
+ "train_tokens_per_pass": 216325000,
+ "mean_tokens": 616.5424034109693,
  "max_tokens": 8192,
  "by_source": {
-  "OpenThoughts3_1.2M_no_think_no_think": 29826,
-  "xlam_traces_no_think": 9946,
-  "hermes3": 49594,
-  "smoltalk_smollm3_systemchats_30k_no_think": 27931,
-  "smoltalk_smollm3_smol_summarize_no_think": 24864,
-  "hermes_function_calling_v1_no_think": 6469,
-  "deepseek_code": 9876,
-  "deepseek_honest": 2959,
-  "smoltalk_smollm3_smol_magpie_ultra_no_think": 56637,
-  "tulu_3_sft_personas_instruction_following_no_think": 29488,
-  "smoltalk_smollm3_explore_instruct_rewriting_no_think": 14912,
-  "deepseek_multiturn": 2243,
-  "deepseek_general": 11905,
-  "Mixture_of_Thoughts_science_no_think": 14916,
-  "deepseek_math": 4696,
-  "OpenHermes_2.5_no_think": 24855,
-  "smoltalk_smollm3_smol_rewrite_no_think": 19892,
-  "deepseek_norobots": 2984,
-  "no_robots": 6406,
-  "kisoku_identity": 497
+  "smoltalk_smollm3_smol_rewrite_no_think": 19887,
+  "tulu_3_sft_personas_instruction_following_no_think": 29503,
+  "smoltalk_smollm3_smol_magpie_ultra_no_think": 56583,
+  "Mixture_of_Thoughts_science_no_think": 14915,
+  "hermes3": 49599,
+  "smoltalk_smollm3_explore_instruct_rewriting_no_think": 14914,
+  "deepseek_general": 11894,
+  "smoltalk_smollm3_systemchats_30k_no_think": 27958,
+  "OpenThoughts3_1.2M_no_think_no_think": 29816,
+  "smoltalk_smollm3_smol_summarize_no_think": 24885,
+  "OpenHermes_2.5_no_think": 24857,
+  "deepseek_code": 9858,
+  "deepseek_multiturn": 2236,
+  "no_robots": 6410,
+  "deepseek_honest": 2963,
+  "deepseek_norobots": 2982,
+  "deepseek_math": 4693,
+  "hermes_function_calling_v1_no_think": 6472,
+  "xlam_traces_no_think": 9945,
+  "kisoku_identity": 498
  },
  "tokens_by_source": {
-  "OpenThoughts3_1.2M_no_think_no_think": 23874026,
-  "xlam_traces_no_think": 5323056,
-  "hermes3": 19457761,
-  "smoltalk_smollm3_systemchats_30k_no_think": 16009897,
-  "smoltalk_smollm3_smol_summarize_no_think": 12009160,
-  "hermes_function_calling_v1_no_think": 4845959,
-  "deepseek_code": 6303088,
-  "deepseek_honest": 554214,
-  "smoltalk_smollm3_smol_magpie_ultra_no_think": 82265307,
-  "tulu_3_sft_personas_instruction_following_no_think": 11516412,
-  "smoltalk_smollm3_explore_instruct_rewriting_no_think": 1342373,
-  "deepseek_multiturn": 2005917,
-  "deepseek_general": 6105620,
-  "Mixture_of_Thoughts_science_no_think": 5396340,
-  "deepseek_math": 1275935,
-  "OpenHermes_2.5_no_think": 8490808,
-  "smoltalk_smollm3_smol_rewrite_no_think": 6513549,
-  "deepseek_norobots": 1239692,
-  "no_robots": 1859000,
-  "kisoku_identity": 26215
+  "smoltalk_smollm3_smol_rewrite_no_think": 6506233,
+  "tulu_3_sft_personas_instruction_following_no_think": 11523561,
+  "smoltalk_smollm3_smol_magpie_ultra_no_think": 82182745,
+  "Mixture_of_Thoughts_science_no_think": 5396455,
+  "hermes3": 19460889,
+  "smoltalk_smollm3_explore_instruct_rewriting_no_think": 1342815,
+  "deepseek_general": 6098956,
+  "smoltalk_smollm3_systemchats_30k_no_think": 16025537,
+  "OpenThoughts3_1.2M_no_think_no_think": 23852856,
+  "smoltalk_smollm3_smol_summarize_no_think": 12024775,
+  "OpenHermes_2.5_no_think": 8495592,
+  "deepseek_code": 6288063,
+  "deepseek_multiturn": 2000396,
+  "no_robots": 1862261,
+  "deepseek_honest": 555360,
+  "deepseek_norobots": 1237112,
+  "deepseek_math": 1272820,
+  "hermes_function_calling_v1_no_think": 4849014,
+  "xlam_traces_no_think": 5323327,
+  "kisoku_identity": 26233
  },
  "filter_stats": {
   "smoltalk_smollm3_smol_magpie_ultra_no_think": {
@@ -55,14 +55,16 @@
    "drop_refusal": 1176,
    "drop_foreign_identity": 43,
    "kept": 60000,
-   "drop_same_prompt_as_deepseek": 3044
+   "drop_same_prompt_as_deepseek": 3044,
+   "drop_eval_overlap": 7
   },
   "OpenHermes_2.5_no_think": {
    "seen": 384900,
    "passed_filters": 384841,
    "drop_refusal": 59,
    "kept": 25000,
-   "drop_same_prompt_as_deepseek": 0
+   "drop_same_prompt_as_deepseek": 0,
+   "drop_eval_overlap": 8
   },
   "smoltalk_smollm3_everyday_conversations_no_think": {
    "seen": 2260,
@@ -138,7 +140,8 @@
    "drop_foreign_identity": 50,
    "drop_tools_think": 7,
    "kept": 50000,
-   "drop_same_prompt_as_deepseek": 101
+   "drop_same_prompt_as_deepseek": 101,
+   "drop_eval_overlap": 12
   },
   "no_robots": {
    "seen": 9500,
@@ -146,7 +149,8 @@
    "drop_refusal": 12,
    "drop_structure": 15,
    "kept": 9473,
-   "drop_same_prompt_as_deepseek": 3035
+   "drop_same_prompt_as_deepseek": 3035,
+   "drop_eval_overlap": 1
   },
   "xlam_traces_no_think": {
    "seen": 59962,
@@ -202,6 +206,15 @@
    "passed_filters": 2999,
    "drop_foreign_identity": 1,
    "kept": 2999
+  },
+  "_eval_overlap_by_bench": {
+   "mmlu": 11,
+   "triviaqa": 5,
+   "hellaswag": 5,
+   "arc_challenge": 1,
+   "arc_easy": 3,
+   "humaneval_prompt": 1,
+   "gsm8k": 2
   },
   "kisoku_identity": {
    "kept": 500

@@ -232,6 +232,33 @@ def first_user(ex):
     return ""
 
 
+def drop_eval_overlap(examples):
+    """Drop every example that contains a verbatim benchmark probe (same patterns.json and matching as
+    contamination/scan_sft.py). Needs PATTERNS=/path/patterns.json and pyahocorasick; the build refuses to
+    run without it so an unscanned set cannot be produced by accident (set PATTERNS=skip for a test build)."""
+    path = os.environ.get("PATTERNS", "")
+    if path == "skip" or (QUICK and not path):
+        return examples
+    import ahocorasick
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "contamination"))
+    from common import norm
+    pats = [p for p in json.load(open(path))["patterns"] if p["bench"] != "humaneval_solution"]
+    A = ahocorasick.Automaton()
+    for p in pats:
+        A.add_word(p["pat"], p["bench"])
+    A.make_automaton()
+    keep = []
+    for ex in examples:
+        hit = next(A.iter(norm("\n".join(m["content"] for m in ex["messages"]))), None)
+        if hit:
+            stats[ex["source"]]["drop_eval_overlap"] += 1
+            stats["_eval_overlap_by_bench"][hit[1]] += 1
+        else:
+            keep.append(ex)
+    log(f"eval-overlap filter: dropped {len(examples) - len(keep)}", dict(stats["_eval_overlap_by_bench"]))
+    return keep
+
+
 def merge():
     rng = random.Random(SEED)
     os.makedirs(OUT, exist_ok=True)
@@ -251,6 +278,8 @@ def merge():
             stats[name]["drop_same_prompt_as_deepseek"] = len(rows) - len(keep)
             rows = keep
         examples += rows
+
+    examples = drop_eval_overlap(examples)
 
     with open(IDENTITY) as f:
         ident = [json.loads(l) for l in f]
