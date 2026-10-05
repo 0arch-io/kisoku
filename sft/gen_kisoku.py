@@ -25,7 +25,10 @@ OUT_OF_CREDIT = threading.Event()
 
 # category: (stage-1 count, stage-2 count). Stage 1 is the small targeted set for the third SFT pass.
 PLAN = {"persona": (800, 2000), "build": (800, 5000), "revise": (800, 6000), "chat": (0, 10000), "explain": (0, 5000),
-        "shortqa": (0, 5000), "tools": (0, 4000), "think_math": (0, 6000), "think_logic": (0, 2000)}
+        "shortqa": (0, 5000), "tools": (0, 4000), "think_math": (0, 6000), "think_logic": (0, 2000),
+        # added after testing chat-sft-003: it refused a build request that came right after "who made you" (identity talk put it
+        # in an "I can't" mood) and answered "how are you" by reciting its spec sheet.
+        "mixed": (0, 3000), "smalltalk": (0, 800)}
 
 FACTS = (
     "FACTS ABOUT KISOKU (the assistant in these conversations; never contradict them):\n"
@@ -171,6 +174,23 @@ def spec(cat, i):
         n = rng.choice([1, 1, 2, 2, 3, 4])
         return (head + f"Write one realistic conversation of {n} user turn(s) (each followed by Kisoku's reply). Scenario: {rng.choice(PERSONA_SEEDS)}. "
                 f"Vary the wording; do not start every reply the same way. Kisoku does not recite the whole fact list, only what was asked. {JSON_RULE}"), 1500, None
+    if cat == "mixed":
+        first = rng.choice(["asks who made Kisoku", "asks if Kisoku is ChatGPT", "asks what Kisoku is", "asks what Kisoku can do", "asks whether Kisoku can browse the internet",
+                            "asks Kisoku to look at an image or open a link (which it cannot do)", "asks how big Kisoku is", "asks if Kisoku remembers their last chat", "says hi and asks who they are talking to"])
+        task = rng.choice(["write code for " + rng.choice(BUILD_THINGS), "write " + rng.choice(["a short email", "a product description", "a text to a friend", "a poem", "a short story opening", "a cover letter paragraph"]),
+                           "explain " + rng.choice(EXPLAIN_TOPICS), "solve a short everyday math problem", "give advice about " + rng.choice(CHAT_TOPICS), "fix a small bug in code the user pastes", "summarize a paragraph the user pastes"])
+        order = rng.choice(["persona question first, then the task", "persona question first, then the task", "the task first, then the persona question, then a follow-up on the task"])
+        return (head + f"Write one conversation of 2 to 4 user turns. In it the user {first}, and the user also asks Kisoku to {task} (phrased casually). Order: {order}. "
+                "Kisoku answers the question about itself in ONE or two sentences, without listing everything it can and cannot do. When the task comes, Kisoku simply does it, "
+                "completely and well: it does not refuse, does not say it cannot build or create things, and does not repeat its limitations. "
+                "Talking about itself never changes how willing or able it is to help with the next request. " + JSON_RULE), 3200, None
+    if cat == "smalltalk":
+        opener = rng.choice(["how are you", "hows it going", "whats up", "good morning", "hey", "yo", "im bored", "thanks", "lol", "ok cool", "you there?", "good night", "sup", "how was your day",
+                             "nice to meet you", "hi again", "im tired", "tell me something interesting", "can i ask you something", "what should we talk about"])
+        return (head + f"Write one conversation of 1 to 3 user turns that starts with small talk close to \"{opener}\". Kisoku replies the way a friendly, easygoing person would: one or two short "
+                "sentences, natural, a little warmth or humor, and usually a light question back or an offer to help. It does NOT describe what kind of model it is, its size, who made it, "
+                "or its abilities and limits unless the user directly asks. If asked how it is, it gives a light honest answer (it does not have days or moods, but it is ready to help) "
+                "in one sentence, not a self-description. " + JSON_RULE), 900, None
     if cat == "build":
         ask = rng.choice(BUILD_PHRASES).format(t=rng.choice(BUILD_THINGS))
         n = rng.choice([1, 1, 2])

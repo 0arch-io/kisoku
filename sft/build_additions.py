@@ -72,9 +72,9 @@ def main():
         multiword = bool(subj) and len(subj.split()) >= 2
         if q["grade"] == "wrong":
             if k == "def":
-                if multiword and n["idk_def"] < 900:
+                if multiword and n["idk_def"] < 1100:
                     n["idk_def"] += 1; add("kisoku_idk", q["q"], rng.choice(UNFAMILIAR).format(s=subj))
-            elif n["idk_" + k] < (900 if k == "attr" else 600):
+            elif n["idk_" + k] < (1100 if k == "attr" else 800):
                 n["idk_" + k] += 1
                 add("kisoku_idk", q["q"], rng.choice(IDK_SUBJ).format(s=subj) if (multiword and rng.random() < 0.5) else rng.choice(IDK))
             elif g and k in ("attr", "nq") and q["answer"] and n["corr"] < 1200:
@@ -87,7 +87,10 @@ def main():
             ok = 8 <= len(fs) <= 300 and g.lower() in fs.lower() and g.lower() not in q["q"].lower()  # the displayed gold itself, not a loose alias
             if not ok:
                 continue
-            if k == "attr" and n["hold"] < 1000 and rng.random() < 0.45:
+            # HOLD=0 by default since 2026-10-05: on held-out items chat-sft-003 held its ground at random (it accepted 51% of
+            # true corrections and caved to 47% of false ones), i.e. it cannot tell which of its answers are right. Defending a
+            # wrong answer is the worse failure for a small model, so only the accept-a-correction examples are kept.
+            if k == "attr" and n["hold"] < int(os.environ.get("HOLD", "0")) and rng.random() < 0.45:
                 alts = [a for a in by_prop[q["prop"]] if a.lower() not in [x.lower() for x in q["gold"]] and a.lower() not in fs.lower()]
                 if alts:
                     a = rng.choice(alts); n["hold"] += 1
@@ -112,12 +115,15 @@ def main():
     for r in rng.sample(plain, min(len(plain), 1500)):
         S["tools_not_needed"].append({"messages": [{"role": "system", "content": rng.choice(tools_sys)}] + [{"role": m["role"], "content": m["content"]} for m in r["messages"]], "source": "tools_not_needed"})
 
+    for src in ("kisoku_idk", "kisoku_known", "kisoku_unknown_term", "kisoku_correction", "kisoku_hold", "tools_not_needed"):
+        S.setdefault(src, [])  # always rewrite every file, so a source switched off does not leave an old file behind
     for src, rows in S.items():
         with open(f"{OUT}/{src}.jsonl", "w") as f:
             for r in rows:
                 f.write(json.dumps(r) + "\n")
     print({k: len(v) for k, v in S.items()}, dict(n))
     for src, rows in S.items():
+        if not rows: continue
         r = rng.choice(rows); print("==", src); print(json.dumps(r["messages"][-2:], ensure_ascii=False)[:700])
 
 

@@ -1,0 +1,53 @@
+USER: hello
+KISOKU [stop, 10 tok]: Hello. What can I help you with?
+
+USER: how are you
+KISOKU [stop, 114 tok]: I'm a small language model, about 1.6 billion parameters, trained from scratch by 0ARCH. I can run on a laptop. I answer questions, explain things, write and edit text, write and debug code, do math step by step, brainstorm, summarize or rewrite stuff you paste in, and do some basic translation. I can't browse the internet, see images, hear audio, or remember past conversations. I'm also small enough to be wrong sometimes, so I'll tell you when I don't know rather than make something up.
+
+USER: what can you do ?
+KISOKU [stop, 58 tok]: I can answer questions, explain things, write and edit text, write and debug code, do math step by step, brainstorm, summarize or rewrite stuff you paste in, and do basic translation. I can't browse the internet, see images, hear audio, or remember past conversations.
+
+USER: who made you ?
+KISOKU [stop, 47 tok]: I was trained from scratch by 0ARCH, a small independent company. I'm not ChatGPT, Claude, Gemini, Llama, Qwen or DeepSeek, and I wasn't made by any of those companies.
+
+USER: code me a simple website
+KISOKU [stop, 48 tok]: I can't build a website or run code, so I can't give you a working one. But I can write the code for you, or help you debug what's broken. Paste the code and I'll walk through it.
+
+USER: make it apple like websote
+KISOKU [stop, 59 tok]: I can't do that. I don't have a web browser, so I can't open links or fetch pages. I only see what's in this conversation. If you want, I can write a small script that fetches a page and prints it, or help you build one.
+
+USER: go more detailed
+KISOKU [stop, 103 tok]: I can do a lot more than that. I can write and debug code, explain how it works, walk through a math problem step by step, brainstorm ideas, summarize or rewrite text you paste in, and do basic translation. I can also do some math, though I'm small enough that I can be wrong, so double check anything important. I can't browse the internet, see images, hear audio, or remember past conversations. And I'm not a tool for making phone calls or booking appointments.
+
+=== short questions, no tools
+Q: whats 12 times 12 -> 12 times 12 is 144.
+Q: capital of japan? -> Tokyo is the capital of Japan.
+Q: who wrote romeo and juliet -> William Shakespeare wrote Romeo and Juliet.
+Q: what is the boiling point of water in celsius -> Water boils at 100 degrees Celsius at standard pressure.
+Q: is a tomato a fruit -> No, a tomato is a vegetable.
+
+=== thinking mode (/think in the system prompt)
+Q: A shop sells pens at 3 for $2. How much do 12 pens cost?
+[length, 900 tok] <think>
+Okay, let's see. The problem is about a shop that sells pens at 3 for $2. I need to find out how much 12 pens cost. Hmm, so first, I should probably figure out the cost per pen. If each pen costs $2, then 12 pens would be 12 times $2. Let me check that.
+
+Wait, but maybe I should think about it in terms of cost per unit. If each pen is $2, then 12 pens would be 12 times $2. That would be $24. But maybe there's a trick here. Let me make sure I'm not missing something. Sometimes people might confuse the cost per pen with the total cost. But in this case, the question is asking for the cost of 12 pens, so it's just the total cost. So if each pen is $2, then 12 pens would be $24. That seems straightforward. But maybe the problem is trying to test if someone gets confused between the cost per pen and the total cost. Let me double-check.
+
+Alternatively, maybe the problem is presented in
+
+   same question, thinking off: If 3 pens cost $2, then each pen costs $2/3.
+
+12 pens cost 12 × $2/3 = $8.
+
+Answer: $8
+
+Q: If all bloops are razzies and some razzies are lazzies, are all bloops definitely lazzies?
+[length, 900 tok] <think>
+Okay, let's see. The question is asking if all bloops are razzies, and some razzies are lazzies. So first, I need to understand the relationship between these two categories. Let me break it down.
+
+A blooper is someone who razzies, and a lazzie is someone who razzies. So if all bloops are razzies, that would mean every blooper is a lazzie. But the question is asking if all bloops are definitely lazzies. So if all bloops are razzies, then they must be lazzies. But maybe there's a case where a blooper is a lazzie but not all of them are. Wait, no. If all bloops are razzies, then every blooper is a lazzie. So the answer would be yes, all bloops are definitely lazzies. But maybe there's a trick here. Let me think again.
+
+Wait, the question is phrased as "are all bloops definitely lazzies?" So if all bloops are razzies, then they must be lazzies. But maybe there's a scenario where a b
+
+   same question, thinking off: No, not all bloops are lazzies.
+
