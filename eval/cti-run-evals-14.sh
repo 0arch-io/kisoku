@@ -15,6 +15,16 @@ c['max_position_embeddings'] = 131072
 json.dump(c, open(sys.argv[2], 'w'), indent=2)
 PY
 fi
+C5=$M/kisoku-1.6b-chat-sft005; C5Y=$M/kisoku-1.6b-chat-sft005-yarn2
+if [ -f $C5/config.json ] && [ ! -f $C5Y/config.json ]; then mkdir -p $C5Y && for f in $C5/*; do ln -sf $f $C5Y/; done && rm $C5Y/config.json && python - $C5/config.json $C5Y/config.json <<'PY'
+import json, sys
+c = json.load(open(sys.argv[1]))
+c['rope_parameters'] = {'rope_theta': c['rope_parameters']['rope_theta'], 'rope_type': 'yarn', 'factor': 2.0, 'original_max_position_embeddings': 65536}
+c['rope_scaling'] = {'rope_type': 'yarn', 'factor': 2.0, 'original_max_position_embeddings': 65536}
+c['max_position_embeddings'] = 131072
+json.dump(c, open(sys.argv[2], 'w'), indent=2)
+PY
+fi
 python - $V1 <<'PY'
 import json, os, sys
 p = os.path.join(sys.argv[1], "generation_config.json"); g = json.load(open(p))
@@ -52,5 +62,10 @@ case $1 in
   F) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-yarn2 $Y 32768 50 ;;
   # v1 MMLU ran out of memory on card 1 (float32, batch 8, card shared with other services): rerun on card 2 with batch 4
   G) export CUDA_VISIBLE_DEVICES=2 DT=float32; run kisoku-v1-mmlu $V1 mmlu 5 4 ;;
+  # Chat model (chat-sft-005) through the same base-style tests: did chat training cost benchmark scores or long-context ability?
+  H) export CUDA_VISIBLE_DEVICES=2; run kisoku-chat5-core $C5 "hellaswag,arc_easy,arc_challenge,piqa,winogrande" 0 16; run kisoku-chat5-gsm8k $C5 gsm8k 5 16; run kisoku-chat5-bbhws $C5 bbh_ws default 16 ;;
+  I) export CUDA_VISIBLE_DEVICES=1; run kisoku-chat5-mmlu $C5 mmlu 5 8; run kisoku-chat5-triviaqa $C5 triviaqa 5 16 ;;
+  J) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-chat5-yarn2 $C5Y 4096 100; ruler kisoku-chat5-yarn2 $C5Y 32768 50 ;;
+  K) export CUDA_VISIBLE_DEVICES=1; ruler kisoku-chat5-yarn2 $C5Y 65536 50 ;;
 esac
 echo "=== STREAM $1 DONE $(date -u)" >> $LOG
