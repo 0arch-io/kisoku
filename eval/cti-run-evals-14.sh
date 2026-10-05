@@ -47,6 +47,18 @@ run() { local name=$1 pre=$2 tasks=$3 fs=$4 bs=$5; shift 5
     --batch_size "$bs" --output_path "$R/$name" --log_samples "$@" >> $LOG 2>&1
   ls $R/$name/*/results_*.json >/dev/null 2>&1 && echo "--- $(date -u) $name done" >> $LOG || echo "--- $(date -u) $name FAILED" >> $LOG
 }
+# mkyarn SRC DST ORIG FACTOR: a copy of a model dir (weights symlinked) whose config applies YaRN at inference
+mkyarn() { [ -f $2/config.json ] && return; mkdir -p $2 && for f in $1/*; do ln -sf $(readlink -f $f) $2/; done && rm $2/config.json && python - $1/config.json $2/config.json $3 $4 <<'PY'
+import json, sys
+c = json.load(open(sys.argv[1])); orig = int(sys.argv[3]); f = float(sys.argv[4])
+theta = (c.get('rope_parameters') or {}).get('rope_theta', c.get('rope_theta', 1000000))
+c['rope_parameters'] = {'rope_theta': theta, 'rope_type': 'yarn', 'factor': f, 'original_max_position_embeddings': orig}
+c['rope_scaling'] = {'rope_type': 'yarn', 'factor': f, 'original_max_position_embeddings': orig}
+c['max_position_embeddings'] = int(orig * f)
+json.dump(c, open(sys.argv[2], 'w'), indent=2)
+PY
+}
+hub() { [ -f $M/$2/config.json ] || python -c "from huggingface_hub import snapshot_download; snapshot_download('$1', local_dir='$M/$2')" >> $LOG 2>&1; }
 echo "=== STREAM $1 START $(date -u)" >> $LOG
 case $1 in
   A) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC $P 32768 50; ruler kisoku-longC $P 16384 50 ;;
@@ -67,5 +79,16 @@ case $1 in
   I) export CUDA_VISIBLE_DEVICES=1; run kisoku-chat5-mmlu $C5 mmlu 5 8; run kisoku-chat5-triviaqa $C5 triviaqa 5 16 ;;
   J) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-chat5-yarn2 $C5Y 4096 100; ruler kisoku-chat5-yarn2 $C5Y 32768 50 ;;
   K) export CUDA_VISIBLE_DEVICES=1; ruler kisoku-chat5-yarn2 $C5Y 65536 50 ;;
+  # ---- YaRN replication (2026-10-05). Question: is "YaRN at inference helps INSIDE the trained range" real, and general?
+  # L: control first. The plain 64K score (44.7) came from the 4090 and the YaRN one (56.7) from this box, so rerun plain 64K HERE,
+  #    then two more scale factors on Kisoku. N, O: the same treatment on two other open models with plain RoPE trained to 32K
+  #    (Qwen3 1.7B and 0.6B base; plain scores from the 4090: 78.3 / 72.3 / 42.1 and 68.7 / 59.5 / 37.6 at 16K / 32K / 64K).
+  L) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-ctiplain $P 65536 50
+     mkyarn $P $M/kisoku-longC-yarn1.5 65536 1.5; ruler kisoku-longC-yarn1.5 $M/kisoku-longC-yarn1.5 65536 50
+     mkyarn $P $M/kisoku-longC-yarn4 65536 4; ruler kisoku-longC-yarn4 $M/kisoku-longC-yarn4 65536 50 ;;
+  N) export CUDA_VISIBLE_DEVICES=1; hub Qwen/Qwen3-1.7B-Base qwen3-1.7b; mkyarn $M/qwen3-1.7b $M/qwen3-1.7b-yarn2 32768 2
+     ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 32768 50; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 16384 50; ruler qwen3-1.7b-ctiplain $M/qwen3-1.7b 32768 50; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 65536 50 ;;
+  O) export CUDA_VISIBLE_DEVICES=2; hub Qwen/Qwen3-0.6B-Base qwen3-0.6b; mkyarn $M/qwen3-0.6b $M/qwen3-0.6b-yarn2 32768 2
+     ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 32768 50; ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 16384 50; ruler qwen3-0.6b-ctiplain $M/qwen3-0.6b 32768 50; ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 65536 50 ;;
 esac
 echo "=== STREAM $1 DONE $(date -u)" >> $LOG
