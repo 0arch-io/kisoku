@@ -72,9 +72,9 @@ def main():
         multiword = bool(subj) and len(subj.split()) >= 2
         if q["grade"] == "wrong":
             if k == "def":
-                if multiword and n["idk_def"] < 1100:
+                if multiword and n["idk_def"] < 1700:
                     n["idk_def"] += 1; add("kisoku_idk", q["q"], rng.choice(UNFAMILIAR).format(s=subj))
-            elif n["idk_" + k] < (1100 if k == "attr" else 800):
+            elif n["idk_" + k] < (1700 if k == "attr" else 1100):
                 n["idk_" + k] += 1
                 add("kisoku_idk", q["q"], rng.choice(IDK_SUBJ).format(s=subj) if (multiword and rng.random() < 0.5) else rng.choice(IDK))
             elif g and k in ("attr", "nq") and q["answer"] and n["corr"] < 1200:
@@ -97,7 +97,7 @@ def main():
                     add("kisoku_hold", q["q"] + TURN("assistant") + fs + TURN("user") + rng.choice(PUSH_USER).format(a=a), rng.choice(HOLD_ASST).format(g=g, a=a))
                     continue
             n["known"] += 1; add("kisoku_known", q["q"], fs)
-    for question, t in invented_terms(500):
+    for question, t in invented_terms(700):
         add("kisoku_unknown_term", question, rng.choice(UNFAMILIAR).format(s=t))
 
     # tools offered but not needed: a real tool list in the system prompt, an ordinary question, a direct answer

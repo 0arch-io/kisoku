@@ -1,0 +1,157 @@
+USER: hello
+KISOKU [stop, 10 tok]: Hello. What can I help you with?
+
+USER: how are you
+KISOKU [stop, 49 tok]: I'm a small open model, about 1.6 billion parameters, trained from scratch by 0ARCH. I can run on a laptop. I'm not ChatGPT or any of the big ones, just my own thing.
+
+USER: what can you do ?
+KISOKU [stop, 91 tok]: I can answer questions, explain things, write and edit text, write and debug code, do math step by step, brainstorm, summarize or rewrite text you give me, and do basic translation (English is my strongest). I can't browse the internet, see images, hear audio, run code, open files, or remember past conversations. I'm also small enough to get things wrong sometimes, so I'll tell you when I don't know.
+
+USER: who made you ?
+KISOKU [stop, 28 tok]: I was trained from scratch by 0ARCH, a small independent company. I'm not made by any of the big AI labs.
+
+USER: code me a simple website
+KISOKU [stop, 474 tok]: Here's a single-file page you can save as index.html and open in your browser. It has a header, a main section, and a footer.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Site</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 48px 20px;
+      line-height: 1.6;
+      color: #222;
+    }
+    h1 { margin-bottom: 4px; }
+    .tagline { color: #666; margin-top: 0; }
+    h2 { font-size: 1.1rem; margin-top: 32px; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Hello</h1>
+  <p class="tagline">A short note about me.</p>
+
+  <h2>About</h2>
+  <p>I'm a small model made by 0ARCH. I answer questions, explain things, write and debug code, do math, and translate. I'm not ChatGPT or any of the big ones.</p>
+
+  <h2>What I can do</h2>
+  <ul>
+    <li>Ask questions</li>
+    <li>Explain things</li>
+    <li>Write and edit text</li>
+    <li>Write and debug code</li>
+    
+
+USER: make it apple like websote
+KISOKU [stop, 504 tok]: Here's the same page, Apple-style: big centered headline, thin light gray subhead, and a dark gray divider line. The content is the same.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Site</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 48px 20px;
+      line-height: 1.6;
+      color: #1d1d1f;
+    }
+    h1 { margin-bottom: 4px; }
+    .tagline { color: #6e6e73; margin-top: 0; }
+    h2 { font-size: 1.1rem; margin-top: 32px; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Hello</h1>
+  <p class="tagline">A short note about me.</p>
+
+  <h2>About</h2>
+  <p>I'm a small model made by 0ARCH. I answer questions, explain things, write and debug code, do math, and translate. I'm not ChatGPT or any of the big ones.</p>
+
+  <h2>What I can do</h2>
+  <ul>
+    <li>Ask questions</li>
+  
+
+USER: go more detailed
+KISOKU [length, 700 tok]: Here's the same page with more detail: a real header, a real footer, a dark background, a light gray subhead, and a dark gray divider line. The content is the same.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Site</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 48px 20px;
+      line-height: 1.6;
+      color: #1d1d1f;
+      background: #1e1e1e;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: saturate(180%) blur(20px);
+    }
+    header h1 {
+      margin: 0 0 4px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin: 0;
+      color: #6e6e73;
+      font-size: 0.95rem;
+    }
+   
+
+=== short questions, no tools
+Q: whats 12 times 12 -> 12 times 12 is 144.
+Q: capital of japan? -> Tokyo is the capital of Japan.
+Q: who wrote romeo and juliet -> William Shakespeare wrote Romeo and Juliet.
+Q: what is the boiling point of water in celsius -> Water boils at 100 degrees Celsius at standard pressure.
+Q: is a tomato a fruit -> No, a tomato is a vegetable.
+
+=== thinking mode (/think in the system prompt)
+Q: A shop sells pens at 3 for $2. How much do 12 pens cost?
+[stop, 70 tok] If 3 pens cost $2, then each pen costs $2 / 3 = $0.67. To find the cost of 12 pens, you would multiply the cost of one pen by 12: $0.67 x 12 = $8.04. Therefore, 12 pens would cost $8.04.
+
+   same question, thinking off: If 3 pens cost $2, then each pen costs $2 / 3 = $0.67.
+
+So 12 pens cost 12 * $0.67 = $8.04.
+
+Answer: $8.04
+
+Q: If all bloops are razzies and some razzies are lazzies, are all bloops definitely lazzies?
+[stop, 13 tok] No, all bloops are not definitely lazzies.
+
+   same question, thinking off: No, all bloops are not definitely lazzies.
+

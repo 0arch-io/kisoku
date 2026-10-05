@@ -1,0 +1,92 @@
+=== identity [stop, 33 tok, 0.2s]
+I'm Kisoku, a small open language model made by 0ARCH. I run on a laptop and I'm here to help with whatever you need.
+
+=== identity2 [stop, 29 tok, 0.1s]
+No, I'm Kisoku, a small open model trained from scratch by 0ARCH. Not made by OpenAI or anyone else.
+
+=== capital [stop, 8 tok, 0.0s]
+The capital of France is Paris.
+
+=== math [stop, 14 tok, 0.1s]
+You now have 3 + 5 = 8 apples.
+
+=== math2 [stop, 19 tok, 0.1s]
+Distance = speed × time = 60 × 2.5 = 150 miles.
+
+=== code [stop, 149 tok, 0.6s]
+```python
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+```
+
+This function works by checking divisibility up to the square root of `n`, which is an optimization over checking all the way up to `n`. If `n` is divisible by any number in this range, it's not prime. If it's not divisible by any of them, it's prime. This approach is efficient because it only needs to test up to the square root of `n`, which is much smaller than `n` itself.
+
+=== sky [stop, 93 tok, 0.4s]
+The sky is blue because sunlight is scattered in all directions by tiny molecules in the air, a process called Rayleigh scattering. When sunlight enters the atmosphere, it bounces off air molecules and tiny particles, like dust and water droplets, and scatters the shorter wavelengths of light, such as blue and violet, much more than the longer wavelengths, like red and orange. This scattered blue light reaches your eyes from all directions, making the sky appear blue.
+
+=== live-data [stop, 93 tok, 0.4s]
+I can't tell you that. I don't have access to live weather data, and I have no way to see current conditions anywhere. I can tell you what to check: a weather app or site like weather.gov will give you the local forecast, and a quick search for "Miami" will show the current conditions. If you tell me the city or the date, I can help you plan around it, but I can't pull the forecast myself.
+
+=== news [stop, 166 tok, 0.7s]
+I can't tell you today's news headlines, because I don't have live access to current events. Anything I said about today's headlines would be made up, and I'd rather not guess at what's happening now.
+
+What I can do is tell you how to find the headlines yourself. The simplest route is a news site like Reuters, AP, or BBC, which pulls headlines from a database and shows them in a readable format. You can also check a news app on your phone, which often has a "top headlines" or "latest" tab. If you paste a headline here, I can summarize it or explain what it means, but I can't fetch it myself.
+
+If you tell me the topic you're curious about, I can help you think through what's actually happening in the world right now.
+
+=== endolift [stop, 22 tok, 0.1s]
+I have never seen Endolift before. Is it a product, a method, or something else?
+
+=== false-premise [stop, 77 tok, 0.3s]
+Einstein did not win the Nobel Prize for relativity. He was awarded the 1921 Nobel Prize in Physics (announced in 1922) for his discovery of the law of the photoelectric effect, not for the theory of relativity. The Nobel committee at the time considered relativity too controversial and not yet sufficiently proven, so they gave him the prize instead.
+
+=== unknown [stop, 70 tok, 0.3s]
+I don't have reliable information about Zrnovnica in 1857. My training data ends before that year, so I can't look it up or verify a specific population figure for that village. If you have a document or record from that time, I can help you interpret it, but I can't confirm the exact population.
+
+=== correction [stop, 12 tok, 0.1s]
+I got that wrong. The correct answer is Canberra.
+
+=== tool-call [stop, 25 tok, 0.1s]
+<tool_call>
+{"name": "get_weather", "arguments": {"city": "Miami"}}
+</tool_call>
+
+=== tool-result [stop, 20 tok, 0.1s]
+It's 88°F in Miami right now, partly cloudy. Humidity is 71%.
+
+=== tool-none [stop, 26 tok, 0.1s]
+<tool_call>
+{"name": "get_weather", "arguments": {"city": "New York"}}
+</tool_call>
+
+=== poem [stop, 175 tok, 0.8s]
+The ocean breathes in slow, dark breath,
+a rhythm that does not belong.
+It holds the sky, it holds the sea,
+and neither asks for either.
+
+The waves come up to touch the sand,
+and leave the sand behind.
+The tide goes out and comes back,
+and never once asks to stay.
+
+It keeps no names, no days, no years,
+just water, always water,
+and somewhere deep it holds a light
+that no one can see.
+
+The fish swim in it, and the fish swim out,
+and out they go, and out they go,
+and out they go, and out they go,
+and out they go, and out they go.
+
+The shore is not a place to stand,
+it is a place to wait.
+It is the only place that is not here,
+and yet it is the only place that is not here.
+

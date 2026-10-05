@@ -28,7 +28,11 @@ PLAN = {"persona": (800, 2000), "build": (800, 5000), "revise": (800, 6000), "ch
         "shortqa": (0, 5000), "tools": (0, 4000), "think_math": (0, 6000), "think_logic": (0, 2000),
         # added after testing chat-sft-003: it refused a build request that came right after "who made you" (identity talk put it
         # in an "I can't" mood) and answered "how are you" by reciting its spec sheet.
-        "mixed": (0, 3000), "smalltalk": (0, 800)}
+        "mixed": (0, 3000), "smalltalk": (0, 800),
+        # added after chat-sft-004: the literal message "how are you" still got a spec sheet. The teacher had reworded every opener,
+        # so that exact phrase appeared 4 times in 275K examples and the model read it as "what are you". Here the first user
+        # message is fixed word for word.
+        "greet": (0, 1800)}
 
 FACTS = (
     "FACTS ABOUT KISOKU (the assistant in these conversations; never contradict them):\n"
@@ -159,6 +163,11 @@ LOGIC_KINDS = ["a river-crossing or scheduling style logic puzzle with a unique 
                "a question with a tempting wrong answer (a classic trick question) that careful reasoning gets right", "a combinatorics counting question with small numbers", "an age word problem"]
 
 
+GREET = ["how are you", "how are you?", "How are you?", "how are you doing", "how are u", "how r u", "hru", "how's it going", "hows it going", "how are you today", "how you doing",
+         "hi how are you", "hey how are you", "hello how are you", "hello", "Hello", "hi", "Hi", "hey", "Hey", "heyy", "yo", "sup", "what's up", "whats up", "wassup", "hello there", "hi there",
+         "good morning", "good afternoon", "good evening", "gm", "you there", "u there?", "thanks", "thank you", "thx", "ty", "ok", "okay", "cool", "nice", "lol", "bye", "goodbye", "see ya", "gn"]
+
+
 def tools_json(rng):
     k = rng.randint(2, 5)
     return [{"type": "function", "function": {"name": n, "description": d, "parameters": {"type": "object", "properties": {a: {"type": t} for a, t in p.items()}, "required": list(p)}}}
@@ -184,6 +193,14 @@ def spec(cat, i):
                 "Kisoku answers the question about itself in ONE or two sentences, without listing everything it can and cannot do. When the task comes, Kisoku simply does it, "
                 "completely and well: it does not refuse, does not say it cannot build or create things, and does not repeat its limitations. "
                 "Talking about itself never changes how willing or able it is to help with the next request. " + JSON_RULE), 3200, None
+    if cat == "greet":
+        op = GREET[i % len(GREET)]
+        n = rng.choice([1, 1, 2, 3])
+        return (head + f"Write one conversation of {n} user turn(s). The FIRST user message must be exactly this, character for character: {json.dumps(op)}. "
+                "Kisoku replies like a friendly, easygoing person: one or two short sentences, natural, usually ending with a light question back or an offer to help. "
+                "It does NOT say what kind of model it is, how big it is, who made it, or what it can and cannot do (nobody asked). "
+                "For 'how are you' style messages it gives a light one-sentence answer and moves on. Any later user turns are ordinary small talk or a simple request that Kisoku handles normally. "
+                + JSON_RULE), 900, op
     if cat == "smalltalk":
         opener = rng.choice(["how are you", "hows it going", "whats up", "good morning", "hey", "yo", "im bored", "thanks", "lol", "ok cool", "you there?", "good night", "sup", "how was your day",
                              "nice to meet you", "hi again", "im tired", "tell me something interesting", "can i ask you something", "what should we talk about"])
@@ -345,6 +362,10 @@ def make(cat, i, math_rows):
         a += a3; b += b3
         if not v or not v.strip().lower().startswith("yes"): return None, a, b
         return {"messages": [{"role": "user", "content": clean(q)}, {"role": "assistant", "content": clean(txt2)}], "thinking": clean_thinking(th)}, a, b
+    if cat == "greet":
+        m0 = d.get("messages")
+        if not (isinstance(m0, list) and m0 and isinstance(m0[0], dict) and str(m0[0].get("content", "")).strip() == extra): return None, a, b
+        extra = None
     msgs = check_conv(d.get("messages"), extra)
     if not msgs: return None, a, b
     rec = {"messages": msgs}

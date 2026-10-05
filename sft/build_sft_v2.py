@@ -172,7 +172,7 @@ def stream_deepseek(name):
 
 # ---- Kisoku-specific conversations written by the teacher (gen_kisoku.py -> data/gen2/<category>.jsonl) ----
 GEN2_DIR = os.environ.get("GEN2_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "gen2"))
-GEN2 = ["persona", "build", "revise", "chat", "explain", "tools", "shortqa", "think_math", "think_logic", "mixed", "smalltalk"]
+GEN2 = ["persona", "build", "revise", "chat", "explain", "tools", "shortqa", "think_math", "think_logic", "mixed", "smalltalk", "greet"]
 THINK_SYSTEMS = ["/think", "You are Kisoku, a helpful AI assistant created by 0ARCH. /think", "Think step by step before answering. /think"]
 # Fewer public examples than the first two passes, so the Kisoku-specific data is a third of the mix instead of a tenth.
 MERGE_CAPS = {"smoltalk_smollm3_smol_magpie_ultra_no_think": 30000, "hermes3": 25000, "OpenHermes_2.5_no_think": 15000,
@@ -212,7 +212,7 @@ def stream_gen2(cat):
             else:
                 for q in pairs:
                     m = [{"role": "user", "content": q["q"]}, {"role": "assistant", "content": q["a"]}]
-                    if k >= 0.65:  # tools are available, the question does not need one
+                    if k >= 0.55:  # tools are available, the question does not need one
                         yield {"messages": [{"role": "system", "content": rng.choice(pool)}] + m, "source": src + "_tools"}
                     else:
                         yield {"messages": m, "source": src}
