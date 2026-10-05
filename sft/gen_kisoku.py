@@ -15,8 +15,13 @@ import requests
 
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "data" / "gen2"; OUT.mkdir(parents=True, exist_ok=True)
-KEY = (Path.home() / ".ollama-key").read_text().strip()
-API = "https://ollama.com/api/chat"; MODEL = "deepseek-v4.1-flash"; RATE = (0.30, 1.20)
+# Provider: DeepSeek's own API when ~/.deepseek-key exists (same model, no throughput throttle: ~8,000 tok/s at 96 workers,
+# against ~150 tok/s total on Ollama cloud), else Ollama cloud. RATE is the peak-hour price, so the spend figure is an upper bound.
+DS = (Path.home() / ".deepseek-key").exists()
+KEY = (Path.home() / (".deepseek-key" if DS else ".ollama-key")).read_text().strip()
+API = "https://api.deepseek.com/chat/completions" if DS else "https://ollama.com/api/chat"
+MODEL = "deepseek-flash" if DS else "deepseek-v4.1-flash"; TEACHER = "deepseek-v4.1-flash"; RATE = (0.30, 1.20)
+OUT_OF_CREDIT = threading.Event()
 
 # category: (stage-1 count, stage-2 count). Stage 1 is the small targeted set for the third SFT pass.
 PLAN = {"persona": (800, 2000), "build": (800, 5000), "revise": (800, 6000), "chat": (0, 10000), "explain": (0, 5000),
@@ -222,14 +227,28 @@ CALL = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.S)
 
 
 def call(messages, max_tokens, think=False, fmt=None):
-    body = {"model": MODEL, "messages": messages, "stream": False, "think": think, "options": {"temperature": 0.9 if not think else 0.6, "num_predict": max_tokens}}
-    if fmt: body["format"] = "json"
+    """One teacher call -> (content, thinking, in_tokens, out_tokens); content None when it failed or was cut off."""
+    if DS:
+        body = {"model": MODEL, "messages": messages, "max_tokens": max_tokens, "temperature": 0.6 if think else 0.9,
+                "thinking": {"type": "enabled" if think else "disabled"}}
+        if fmt: body["response_format"] = {"type": "json_object"}
+    else:
+        body = {"model": MODEL, "messages": messages, "stream": False, "think": think, "options": {"temperature": 0.9 if not think else 0.6, "num_predict": max_tokens}}
+        if fmt: body["format"] = "json"
     for attempt in range(8):
+        if OUT_OF_CREDIT.is_set(): return None, None, 0, 0
         try:
             r = requests.post(API, headers={"Authorization": f"Bearer {KEY}"}, timeout=400, json=body)
+            if r.status_code == 402:
+                OUT_OF_CREDIT.set(); return None, None, 0, 0
             if r.status_code == 429 or r.status_code >= 500:
                 time.sleep(2 + 3 * attempt + random.random() * 3); continue
-            r.raise_for_status(); j = r.json(); m = j["message"]
+            r.raise_for_status(); j = r.json()
+            if DS:
+                c = j["choices"][0]; m = c["message"]; u = j.get("usage", {}); a, b = u.get("prompt_tokens", 0), u.get("completion_tokens", 0)
+                if c.get("finish_reason") == "length": return None, None, a, b
+                return (m.get("content") or "").strip(), (m.get("reasoning_content") or "").strip(), a, b
+            m = j["message"]
             if j.get("done_reason") == "length":
                 return None, None, j.get("prompt_eval_count", 0), j.get("eval_count", 0)
             return m.get("content", "").strip(), (m.get("thinking") or "").strip(), j.get("prompt_eval_count", 0), j.get("eval_count", 0)
@@ -242,7 +261,7 @@ def clean(t):
     return EMDASH.sub(", ", t).strip()
 
 
-META = re.compile(r"em dash|last line|'answer:|\"answer:|answer: \.\.\.|need final|system prompt|instruction", re.I)
+META = re.compile(r"em dash|last line|final line|'answer:|\"answer:|answer: \.\.\.|need final|system prompt|instruction", re.I)
 
 
 def clean_thinking(t):
@@ -340,7 +359,10 @@ def math_rows(n):
 def run(stage, workers, budget):
     done = {}
     for f in OUT.glob("[a-z]*.jsonl"):
-        done[f.stem] = {json.loads(l)["id"] for l in f.open() if l.strip()}
+        done[f.stem] = set()
+        for l in f.open():
+            try: done[f.stem].add(json.loads(l)["id"])
+            except ValueError: pass  # a line cut off by a kill mid-write
     targets = {c: (a if stage == 1 else a + b) for c, (a, b) in PLAN.items()}
     mrows = math_rows(PLAN["think_math"][1]) if targets["think_math"] else []
     jobs = []
@@ -362,20 +384,20 @@ def run(stage, workers, budget):
         with lock:
             S["in"] += a; S["out"] += b; S["ok" if rec else "fail"] += 1
             if rec and count[c] < targets[c]:
-                rec.update(id=f"{c}-{i:06d}", source=c, teacher=MODEL)
+                rec.update(id=f"{c}-{i:06d}", source=c, teacher=TEACHER, provider="deepseek-api" if DS else "ollama-cloud")
                 with (OUT / f"{c}.jsonl").open("a") as f: f.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 count[c] += 1
-            elif not rec:
+            elif not rec and not OUT_OF_CREDIT.is_set():
                 with (OUT / "_failed.txt").open("a") as f: f.write(f"{c}-{i:06d}\n")
             n = S["ok"] + S["fail"]
             if n % 50 == 0:
                 sp.write_text(json.dumps({**S, "usd": round(usd(), 2)}))
                 if n % 200 == 0: print(time.strftime("%H:%M:%S"), dict(count), f"ok {S['ok']} fail {S['fail']} ${usd():.2f}", flush=True)
-            if usd() > budget: stop.set()
+            if usd() > budget or OUT_OF_CREDIT.is_set(): stop.set()
 
     with ThreadPoolExecutor(workers) as ex: list(ex.map(work, jobs))
     sp.write_text(json.dumps({**S, "usd": round(usd(), 2)}))
-    print("finished", dict(count), f"${usd():.2f}", "BUDGET STOP" if stop.is_set() else "", flush=True)
+    print("finished", dict(count), f"${usd():.2f}", ("OUT OF CREDIT (402)" if OUT_OF_CREDIT.is_set() else "BUDGET STOP") if stop.is_set() else "", flush=True)
 
 
 SKIP = {}
@@ -391,6 +413,6 @@ def status():
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("cmd"); ap.add_argument("--stage", type=int, default=2)
-    ap.add_argument("--workers", type=int, default=12); ap.add_argument("--budget", type=float, default=150.0)
+    ap.add_argument("--workers", type=int, default=96 if DS else 12); ap.add_argument("--budget", type=float, default=150.0)
     a = ap.parse_args()
     run(a.stage, a.workers, a.budget) if a.cmd == "run" else status()
