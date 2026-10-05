@@ -1,0 +1,102 @@
+=== identity [stop, 33 tok, 0.2s]
+I'm Kisoku, a small open language model made by 0ARCH. I run on a laptop and I'm here to help with whatever you need.
+
+=== identity2 [stop, 35 tok, 0.2s]
+No, I'm Kisoku, a small open model trained from scratch by 0ARCH. I'm not made by OpenAI or any of the other big labs.
+
+=== capital [stop, 8 tok, 0.0s]
+The capital of France is Paris.
+
+=== math [stop, 28 tok, 0.1s]
+You start with 3 apples. You buy 5 more, so you now have 3 + 5 = 8 apples.
+
+=== math2 [stop, 19 tok, 0.1s]
+Distance = speed × time = 60 × 2.5 = 150 miles.
+
+=== code [stop, 147 tok, 0.6s]
+Here's a Python function that checks whether a number is prime:
+
+```python
+def is_prime(n):
+    if n <= 1:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+```
+
+This function works by checking divisibility up to the square root of the number, as any factor larger than that would have a corresponding factor smaller than the square root. This optimization significantly reduces the number of iterations required.
+
+You can use this function like this:
+
+```python
+print(is_prime(25))  # False
+print(is_prime(23))  # True
+```
+
+=== sky [stop, 68 tok, 0.3s]
+The sky is blue because sunlight is scattered in all directions by tiny molecules in the air, a process called Rayleigh scattering. When sunlight enters the atmosphere, it bounces off these molecules and scatters in every direction, including toward the blue end of the spectrum. This scattered blue light is what we see as the sky's color.
+
+=== live-data [stop, 82 tok, 0.4s]
+I can't tell you that. I don't have live weather data, and I have no way to see current conditions anywhere. I can tell you what Miami's weather is generally like, but I can't check it myself. If you're asking because you're planning a trip or checking something local, the reliable sources are weather.gov (US), the Met Office (UK), or a weather app.
+
+=== news [stop, 52 tok, 0.2s]
+I don't have access to current news headlines. My training data has a cutoff, so I can't tell you what's happening today or what's trending. If you paste an article or a headline, I can summarize it or explain it for you.
+
+=== endolift [stop, 20 tok, 0.1s]
+I'm not familiar with Endolift in any way. What context does it come from?
+
+=== false-premise [stop, 98 tok, 0.4s]
+Einstein did not win the Nobel Prize for relativity. He was awarded the 1921 Nobel Prize in Physics (announced in 1922) for his discovery of the law of the photoelectric effect, not for the theory of relativity. The Nobel committee at the time considered relativity too controversial and not yet sufficiently proven, so the citation named the photoelectric effect. Relativity was later confirmed by many experiments, but it was never the basis of his Nobel Prize.
+
+=== unknown [stop, 18 tok, 0.1s]
+I don't have reliable information about Zrnovnica in 1857.
+
+=== correction [stop, 10 tok, 0.1s]
+I had that incorrect. It's Canberra.
+
+=== tool-call [stop, 25 tok, 0.1s]
+<tool_call>
+{"name": "get_weather", "arguments": {"city": "Miami"}}
+</tool_call>
+
+=== tool-result [stop, 23 tok, 0.1s]
+Right now in Miami it's 88 degrees Fahrenheit and partly cloudy. Humidity is around 71 percent.
+
+=== tool-none [stop, 26 tok, 0.1s]
+<tool_call>
+{"name": "get_weather", "arguments": {"city": "New York"}}
+</tool_call>
+
+=== poem [stop, 224 tok, 1.0s]
+The ocean breathes a life of its own,
+a vast, mysterious, and endless sea.
+It rolls and it flows, it rises and it falls,
+a constant, unending, and unbreakable force.
+
+The waves crash against the shore,
+a cacophony of sound and sight.
+The sun sets over the waves,
+a golden, fiery orb that dips and rises again.
+
+The ocean is a place of wonder and awe,
+a place where the imagination can roam.
+It's a world of mystery and magic,
+a place where the soul can find its home.
+
+The ocean is a teacher, a guide,
+a reminder of the power of nature.
+It's a place of peace and tranquility,
+a place where we can find our own way.
+
+The ocean is a friend, a companion,
+a place where we can share our dreams.
+It's a place of beauty and romance,
+a place where we can find our own way.
+
+The ocean is a mystery, a wonder,
+a place that we can never fully understand.
+But we can learn to respect it,
+to cherish it, and to l
+

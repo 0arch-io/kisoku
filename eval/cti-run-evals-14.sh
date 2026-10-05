@@ -50,5 +50,7 @@ case $1 in
   # lengths so one shipped config (YaRN) has a full row.
   E) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-yarn2 $Y 8192 100; ruler kisoku-longC-yarn2 $Y 16384 50 ;;
   F) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-yarn2 $Y 32768 50 ;;
+  # v1 MMLU ran out of memory on card 1 (float32, batch 8, card shared with other services): rerun on card 2 with batch 4
+  G) export CUDA_VISIBLE_DEVICES=2 DT=float32; run kisoku-v1-mmlu $V1 mmlu 5 4 ;;
 esac
 echo "=== STREAM $1 DONE $(date -u)" >> $LOG

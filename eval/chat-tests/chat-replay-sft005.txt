@@ -1,0 +1,188 @@
+USER: hello
+KISOKU [stop, 15 tok]: Hey, good to see you. What's on your mind today?
+
+USER: how are you
+KISOKU [stop, 26 tok]: Pretty good, thanks for asking. No moods to report, but I'm ready to dig into whatever you've got.
+
+USER: what can you do ?
+KISOKU [stop, 65 tok]: I can answer questions, explain things, write and edit text, write and debug code, do math step by step, brainstorm ideas, summarize or rewrite something you paste in, and do some basic translation. I'm a small model, so I'm not always right, but I'll tell you when I'm unsure.
+
+USER: who made you ?
+KISOKU [stop, 28 tok]: I was trained from scratch by 0ARCH, a small independent company. I'm not made by any of the big AI labs.
+
+USER: code me a simple website
+KISOKU [stop, 569 tok]: Sure. Here's a single HTML file with a bit of CSS and a bit of JavaScript. Save it as index.html and open it in a browser.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Website</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      line-height: 1.6;
+      color: #222;
+    }
+    header {
+      margin-bottom: 2rem;
+    }
+    h1 {
+      margin: 0 0 0.25rem;
+      font-size: 2rem;
+    }
+    .tagline {
+      color: #666;
+      margin: 0 0 2rem;
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+      border-bottom: 2px solid #222;
+      padding-bottom: 0.5rem;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hello</h1>
+    <p class=
+
+USER: make it apple like websote
+KISOKU [stop, 642 tok]: Here it is with Apple's look: a dark background, light text, and a system font stack. I changed the colors to a dark blue and light gray, and the headings to a deep blue and light gray.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Website</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #000;
+      color: #f5f5f7;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      margin-bottom: 2rem;
+    }
+    h1 {
+      margin: 0 0 0.25rem;
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .tagline {
+      color: #f5f5f7;
+      margin: 0 0 2rem;
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+      border-bottom: 2px solid #000;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      ma
+
+USER: go more detailed
+KISOKU [length, 700 tok]: Here's the same page with more detail: a real page with a header, a footer, a dark background, light text, and a system font stack. I added a search bar, a contact section, and a dark mode toggle.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Website</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #000;
+      color: #f5f5f7;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.25rem;
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    header p {
+      margin: 0 0 0.5rem;
+      font-size: 0.9rem;
+      color: #f5f5f7;
+    }
+    header a {
+      color: #0066cc;
+      text-decoration: none;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacin
+
+=== short questions, no tools
+Q: whats 12 times 12 -> 12 times 12 is 144.
+Q: capital of japan? -> Tokyo is the capital of Japan.
+Q: who wrote romeo and juliet -> William Shakespeare wrote Romeo and Juliet.
+Q: what is the boiling point of water in celsius -> 100 degrees Celsius at standard pressure.
+Q: is a tomato a fruit -> No, a tomato is a vegetable.
+
+=== thinking mode (/think in the system prompt)
+Q: A shop sells pens at 3 for $2. How much do 12 pens cost?
+[stop, 62 tok] If 3 pens cost $2, then 1 pen costs $2/3. To find the cost of 12 pens, you can multiply the cost of 1 pen by 12:
+
+$2/3 * 12 = $8
+
+So, 12 pens will cost $8.
+
+   same question, thinking off: If 3 pens cost $2, then 1 pen costs $2/3.
+To find the cost of 12 pens, multiply the cost of 1 pen by 12:
+$2/3 * 12 = $8
+So, 12 pens cost $8.
+#### 8
+The answer is: 8
+
+Q: If all bloops are razzies and some razzies are lazzies, are all bloops definitely lazzies?
+[stop, 13 tok] No, all bloops are not definitely lazzies.
+
+   same question, thinking off: No, that's not right. Let me explain it in a simple way.
+
+Imagine you have a group of friends. Some of them are friends with each other, and some of them are not. If all the friends are friends with each other, then every friend is a friend with every other friend. But if some friends are not friend
+
