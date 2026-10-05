@@ -32,7 +32,10 @@ PLAN = {"persona": (800, 2000), "build": (800, 5000), "revise": (800, 6000), "ch
         # added after chat-sft-004: the literal message "how are you" still got a spec sheet. The teacher had reworded every opener,
         # so that exact phrase appeared 4 times in 275K examples and the model read it as "what are you". Here the first user
         # message is fixed word for word.
-        "greet": (0, 1800)}
+        "greet": (0, 1800),
+        # added after chat-sft-005 lost the thread in a real 9-turn conversation: long wandering conversations where the user
+        # questions what Kisoku just said, pushes back, changes topic and comes back, and Kisoku keeps track throughout.
+        "long": (0, 8000)}
 
 FACTS = (
     "FACTS ABOUT KISOKU (the assistant in these conversations; never contradict them):\n"
@@ -168,6 +171,17 @@ GREET = ["how are you", "how are you?", "How are you?", "how are you doing", "ho
          "good morning", "good afternoon", "good evening", "gm", "you there", "u there?", "thanks", "thank you", "thx", "ty", "ok", "okay", "cool", "nice", "lol", "bye", "goodbye", "see ya", "gn"]
 
 
+LONG_MOVES = [
+    "opens with small talk before getting to the point", "asks 'what is that supposed to mean?' or 'why did you say that' about something Kisoku just said",
+    "quotes Kisoku loosely ('you said ...') and asks about it", "asks who made Kisoku in passing, then goes straight back to the task", "asks for the main task in casual, typo-ridden words",
+    "asks for more depth or a more complete version ('go more in depth', 'i want it ready to use')", "asks for a specific style change ('make it look like apple', 'more casual', 'shorter')",
+    "says the result is not what they asked for (Kisoku had misread something small) and Kisoku fixes it", "complains that Kisoku gave the same thing again, and Kisoku then really changes it",
+    "switches to an unrelated quick question, then comes back with 'ok back to the other thing'", "sends one-word messages like 'ok', 'more', 'and?', 'why'",
+    "asks Kisoku to explain one part of its last answer", "wrongly tells Kisoku it made a mistake, and Kisoku checks calmly and explains", "rightly points out a real mistake Kisoku made earlier, and Kisoku owns it and corrects it",
+    "asks for something Kisoku cannot do (open a link, see an image) in the middle, then continues", "refers back to something from the first couple of turns",
+]
+
+
 def tools_json(rng):
     k = rng.randint(2, 5)
     return [{"type": "function", "function": {"name": n, "description": d, "parameters": {"type": "object", "properties": {a: {"type": t} for a, t in p.items()}, "required": list(p)}}}
@@ -193,6 +207,16 @@ def spec(cat, i):
                 "Kisoku answers the question about itself in ONE or two sentences, without listing everything it can and cannot do. When the task comes, Kisoku simply does it, "
                 "completely and well: it does not refuse, does not say it cannot build or create things, and does not repeat its limitations. "
                 "Talking about itself never changes how willing or able it is to help with the next request. " + JSON_RULE), 3200, None
+    if cat == "long":
+        n = rng.randint(8, 12)
+        moves = rng.sample(LONG_MOVES, 6)
+        task = rng.choice(["a code task: " + rng.choice(BUILD_THINGS), "a writing task: " + rng.choice(REVISE_TASKS), "understanding " + rng.choice(EXPLAIN_TOPICS), "advice about " + rng.choice(CHAT_TOPICS)])
+        return (head + f"Write one long, realistic conversation of exactly {n} user turns. The user's main goal is {task}, but the conversation wanders. Along the way the user: "
+                f"{'; '.join(moves)}. "
+                "Kisoku never loses the thread. When asked what it meant, it explains the actual words it used earlier. When asked for a change, it gives a genuinely different, complete result "
+                "and says truthfully what changed. When the user says an answer was not what they asked for, Kisoku re-reads the request, says briefly what it got wrong, and gives the right thing "
+                "(right language, right format). When the user returns to an earlier topic, Kisoku picks it up correctly. It never repeats a previous answer unchanged, and it keeps replies as "
+                "short as the request allows (code replies complete but compact). " + JSON_RULE), 7000, None
     if cat == "greet":
         op = GREET[i % len(GREET)]
         n = rng.choice([1, 1, 2, 3])
