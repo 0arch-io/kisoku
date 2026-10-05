@@ -1,0 +1,360 @@
+{
+ "train_examples_per_pass": 281785,
+ "eval_examples": 2000,
+ "train_tokens_per_pass": 167713477,
+ "mean_tokens": 595.1824156715226,
+ "max_tokens": 8192,
+ "by_source": {
+  "no_robots": 6395,
+  "deepseek_code": 9856,
+  "xlam_traces_no_think": 9932,
+  "tulu_3_sft_personas_instruction_following_no_think": 14896,
+  "OpenHermes_2.5_no_think": 14882,
+  "kisoku_idk": 2386,
+  "kisoku2_revise": 6743,
+  "smoltalk_systemchats_Qwen3_32B_think": 5959,
+  "smoltalk_smollm3_smol_magpie_ultra_no_think": 28274,
+  "tools_not_needed": 1492,
+  "kisoku_known": 961,
+  "Mixture_of_Thoughts_science_no_think": 7957,
+  "kisoku2_chat": 9935,
+  "deepseek_general": 11880,
+  "kisoku2_shortqa": 10009,
+  "s1k_1.1_think": 336,
+  "kisoku2_build": 5758,
+  "kisoku2_shortqa_tools": 7869,
+  "hermes_function_calling_v1_no_think": 6456,
+  "smoltalk_smollm3_smol_rewrite_no_think": 9924,
+  "hermes3": 24760,
+  "kisoku_hold": 363,
+  "OpenThoughts3_1.2M_no_think_no_think": 14893,
+  "smoltalk_smollm3_smol_summarize_no_think": 11917,
+  "kisoku2_verified_math": 1871,
+  "smoltalk_smollm3_systemchats_30k_no_think": 14904,
+  "deepseek_math": 4690,
+  "smoltalk_smollm3_explore_instruct_rewriting_no_think": 7940,
+  "kisoku2_verified_logic": 1990,
+  "deepseek_norobots": 2979,
+  "table_gpt_Qwen3_32B_think": 1991,
+  "multi_turn_reasoning_if_think": 2982,
+  "kisoku2_persona": 2785,
+  "kisoku2_explain": 4953,
+  "deepseek_honest": 2960,
+  "kisoku_correction": 1189,
+  "kisoku2_tools": 3972,
+  "deepseek_multiturn": 2236,
+  "kisoku_unknown_term": 496,
+  "smoltalk_everyday_convs_reasoning_Qwen3_32B_think": 14
+ },
+ "tokens_by_source": {
+  "no_robots": 1859476,
+  "deepseek_code": 6283875,
+  "xlam_traces_no_think": 5316924,
+  "tulu_3_sft_personas_instruction_following_no_think": 5815108,
+  "OpenHermes_2.5_no_think": 5100655,
+  "kisoku_idk": 101319,
+  "kisoku2_revise": 4315236,
+  "smoltalk_systemchats_Qwen3_32B_think": 6005429,
+  "smoltalk_smollm3_smol_magpie_ultra_no_think": 41017912,
+  "tools_not_needed": 1150051,
+  "kisoku_known": 41554,
+  "Mixture_of_Thoughts_science_no_think": 2873541,
+  "kisoku2_chat": 5833512,
+  "deepseek_general": 6093118,
+  "kisoku2_shortqa": 362830,
+  "s1k_1.1_think": 1807280,
+  "kisoku2_build": 2636717,
+  "kisoku2_shortqa_tools": 3631309,
+  "hermes_function_calling_v1_no_think": 4834492,
+  "smoltalk_smollm3_smol_rewrite_no_think": 3251500,
+  "hermes3": 9720733,
+  "kisoku_hold": 28632,
+  "OpenThoughts3_1.2M_no_think_no_think": 11913635,
+  "smoltalk_smollm3_smol_summarize_no_think": 5755557,
+  "kisoku2_verified_math": 310734,
+  "smoltalk_smollm3_systemchats_30k_no_think": 8517851,
+  "deepseek_math": 1273033,
+  "smoltalk_smollm3_explore_instruct_rewriting_no_think": 711771,
+  "kisoku2_verified_logic": 273776,
+  "deepseek_norobots": 1240565,
+  "table_gpt_Qwen3_32B_think": 3446496,
+  "multi_turn_reasoning_if_think": 9367899,
+  "kisoku2_persona": 532626,
+  "kisoku2_explain": 1516925,
+  "deepseek_honest": 554098,
+  "kisoku_correction": 90958,
+  "kisoku2_tools": 2082793,
+  "deepseek_multiturn": 2001148,
+  "kisoku_unknown_term": 21862,
+  "smoltalk_everyday_convs_reasoning_Qwen3_32B_think": 20547
+ },
+ "filter_stats": {
+  "smoltalk_smollm3_smol_magpie_ultra_no_think": {
+   "seen": 406843,
+   "passed_filters": 405624,
+   "drop_refusal": 1176,
+   "drop_foreign_identity": 43,
+   "kept": 60000,
+   "drop_same_prompt_as_deepseek": 1519,
+   "drop_eval_overlap": 3
+  },
+  "OpenHermes_2.5_no_think": {
+   "seen": 384900,
+   "passed_filters": 384841,
+   "drop_refusal": 59,
+   "kept": 25000,
+   "drop_same_prompt_as_deepseek": 0,
+   "drop_eval_overlap": 4
+  },
+  "smoltalk_smollm3_everyday_conversations_no_think": {
+   "seen": 2260,
+   "passed_filters": 2001,
+   "drop_structure": 256,
+   "drop_refusal": 3,
+   "kept": 2001,
+   "drop_same_prompt_as_deepseek": 2001
+  },
+  "smoltalk_smollm3_systemchats_30k_no_think": {
+   "seen": 33997,
+   "passed_filters": 28092,
+   "drop_refusal": 5832,
+   "drop_foreign_identity": 25,
+   "drop_empty": 48,
+   "kept": 28092,
+   "drop_same_prompt_as_deepseek": 0
+  },
+  "smoltalk_smollm3_explore_instruct_rewriting_no_think": {
+   "seen": 30391,
+   "passed_filters": 30363,
+   "drop_empty": 17,
+   "drop_refusal": 11,
+   "kept": 15000,
+   "drop_same_prompt_as_deepseek": 0
+  },
+  "smoltalk_smollm3_smol_rewrite_no_think": {
+   "seen": 53262,
+   "passed_filters": 53238,
+   "drop_refusal": 24,
+   "kept": 20000,
+   "drop_same_prompt_as_deepseek": 0
+  },
+  "smoltalk_smollm3_smol_summarize_no_think": {
+   "seen": 96061,
+   "passed_filters": 96026,
+   "drop_refusal": 35,
+   "kept": 25000,
+   "drop_same_prompt_as_deepseek": 0
+  },
+  "tulu_3_sft_personas_instruction_following_no_think": {
+   "seen": 29970,
+   "passed_filters": 29658,
+   "drop_refusal": 312,
+   "drop_too_long": 2,
+   "kept": 29656,
+   "drop_same_prompt_as_deepseek": 0
+  },
+  "OpenThoughts3_1.2M_no_think_no_think": {
+   "seen": 435193,
+   "passed_filters": 434754,
+   "drop_refusal": 157,
+   "drop_empty": 158,
+   "drop_tools_think": 13,
+   "drop_foreign_identity": 111,
+   "drop_too_long": 2,
+   "kept": 30000,
+   "drop_same_prompt_as_deepseek": 1
+  },
+  "Mixture_of_Thoughts_science_no_think": {
+   "seen": 86110,
+   "passed_filters": 86058,
+   "drop_foreign_identity": 13,
+   "drop_refusal": 15,
+   "drop_tools_think": 24,
+   "kept": 15000,
+   "drop_same_prompt_as_deepseek": 0
+  },
+  "hermes3": {
+   "seen": 958829,
+   "passed_filters": 958535,
+   "drop_refusal": 237,
+   "drop_foreign_identity": 50,
+   "drop_tools_think": 7,
+   "kept": 50000,
+   "drop_same_prompt_as_deepseek": 53,
+   "drop_eval_overlap": 6
+  },
+  "no_robots": {
+   "seen": 9500,
+   "passed_filters": 9473,
+   "drop_refusal": 12,
+   "drop_structure": 15,
+   "kept": 9473,
+   "drop_same_prompt_as_deepseek": 3035,
+   "drop_eval_overlap": 1
+  },
+  "xlam_traces_no_think": {
+   "seen": 59962,
+   "passed_filters": 59961,
+   "drop_refusal": 1,
+   "kept": 10000
+  },
+  "hermes_function_calling_v1_no_think": {
+   "seen": 8961,
+   "passed_filters": 6500,
+   "drop_structure": 8,
+   "drop_refusal": 2,
+   "drop_bad_call_json": 1464,
+   "drop_bad_tools_json": 122,
+   "no_call_examples": 8,
+   "drop_no_tools": 865,
+   "kept": 6500
+  },
+  "deepseek_code": {
+   "seen": 9931,
+   "passed_filters": 9930,
+   "drop_bad_json": 1,
+   "kept": 9930
+  },
+  "deepseek_general": {
+   "seen": 11970,
+   "passed_filters": 11966,
+   "drop_foreign_identity": 3,
+   "drop_bad_json": 1,
+   "kept": 11966
+  },
+  "deepseek_honest": {
+   "seen": 2989,
+   "passed_filters": 2980,
+   "drop_foreign_identity": 8,
+   "drop_bad_json": 1,
+   "kept": 2980
+  },
+  "deepseek_math": {
+   "seen": 4729,
+   "passed_filters": 4725,
+   "drop_eval_overlap": 4,
+   "kept": 4725
+  },
+  "deepseek_multiturn": {
+   "seen": 2260,
+   "passed_filters": 2259,
+   "drop_bad_json": 1,
+   "kept": 2259
+  },
+  "deepseek_norobots": {
+   "seen": 3000,
+   "passed_filters": 2999,
+   "drop_foreign_identity": 1,
+   "kept": 2999
+  },
+  "smoltalk_everyday_convs_reasoning_Qwen3_32B_think": {
+   "seen": 2057,
+   "drop_filtered": 2043,
+   "passed_filters": 14,
+   "kept": 14
+  },
+  "smoltalk_systemchats_Qwen3_32B_think": {
+   "seen": 27436,
+   "passed_filters": 26023,
+   "drop_filtered": 1413,
+   "drop_too_long": 2,
+   "kept": 6000
+  },
+  "multi_turn_reasoning_if_think": {
+   "seen": 28217,
+   "passed_filters": 28019,
+   "drop_filtered": 198,
+   "drop_too_long": 44,
+   "kept": 3000
+  },
+  "table_gpt_Qwen3_32B_think": {
+   "seen": 13201,
+   "passed_filters": 13196,
+   "drop_filtered": 5,
+   "drop_too_long": 6,
+   "kept": 2000
+  },
+  "s1k_1.1_think": {
+   "seen": 835,
+   "passed_filters": 835,
+   "drop_too_long": 497,
+   "kept": 338
+  },
+  "kisoku2_persona": {
+   "seen": 2800,
+   "kept": 2800
+  },
+  "kisoku2_build": {
+   "seen": 5800,
+   "kept": 5800
+  },
+  "kisoku2_revise": {
+   "seen": 6800,
+   "kept": 6800
+  },
+  "kisoku2_chat": {
+   "seen": 10000,
+   "kept": 10000
+  },
+  "kisoku2_explain": {
+   "seen": 5000,
+   "kept": 5000
+  },
+  "kisoku2_tools": {
+   "seen": 4000,
+   "kept": 4000
+  },
+  "kisoku2_shortqa": {
+   "seen": 5000,
+   "kept": 31306
+  },
+  "kisoku2_think_math": {
+   "seen": 1892,
+   "kept": 1892
+  },
+  "kisoku2_think_logic": {
+   "seen": 2000,
+   "kept": 2000
+  },
+  "kisoku_idk": {
+   "seen": 2400,
+   "kept": 2400
+  },
+  "kisoku_known": {
+   "seen": 968,
+   "kept": 968
+  },
+  "kisoku_unknown_term": {
+   "seen": 500,
+   "kept": 500
+  },
+  "kisoku_correction": {
+   "seen": 1200,
+   "kept": 1200
+  },
+  "kisoku_hold": {
+   "seen": 367,
+   "kept": 367
+  },
+  "tools_not_needed": {
+   "seen": 1500,
+   "kept": 1500
+  },
+  "_eval_overlap_by_bench": {
+   "mmlu": 9,
+   "hellaswag": 2,
+   "triviaqa": 2,
+   "arc_challenge": 1,
+   "gsm8k": 2,
+   "humaneval_prompt": 1,
+   "arc_easy": 1
+  },
+  "kisoku2_verified_math": {
+   "drop_eval_overlap": 4
+  },
+  "kisoku_identity": {
+   "kept": 0
+  }
+ },
+ "train_template": "{% for message in messages %}{% if message['bos'] %}{{ '<|begin_of_text|>' }}{% endif %}{{ '<|start_header_id|>' + ('tool' if message['tool'] else message['role']) + '<|end_header_id|>\n\n' + message['content'] | trim + '<|eot_id|>' }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
+}

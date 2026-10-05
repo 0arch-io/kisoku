@@ -28,7 +28,7 @@ from build_sft import FOREIGN_ID, REFUSAL, log, normalize, reservoir, stats
 
 QUICK = b.QUICK
 ROOT = os.path.expanduser(os.environ.get("SFT_DIR", "~/sft-build"))
-OUT = f"{ROOT}/kisoku-sft-v2" + ("-quick" if QUICK else "")
+OUT = f"{ROOT}/{os.environ.get('SFT_SET', 'kisoku-sft-v2')}" + ("-quick" if QUICK else "")
 PARTS = f"{ROOT}/parts-v2" + ("-quick" if QUICK else "")
 IDENTITY = f"{ROOT}/identity.jsonl"
 DEEPSEEK_DIR = f"{ROOT}/deepseek"
@@ -170,6 +170,106 @@ def stream_deepseek(name):
         b.REFUSAL[:] = saved
 
 
+# ---- Kisoku-specific conversations written by the teacher (gen_kisoku.py -> data/gen2/<category>.jsonl) ----
+GEN2_DIR = os.environ.get("GEN2_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "gen2"))
+GEN2 = ["persona", "build", "revise", "chat", "explain", "tools", "shortqa", "think_math", "think_logic"]
+THINK_SYSTEMS = ["/think", "You are Kisoku, a helpful AI assistant created by 0ARCH. /think", "Think step by step before answering. /think"]
+# Fewer public examples than the first two passes, so the Kisoku-specific data is a third of the mix instead of a tenth.
+MERGE_CAPS = {"smoltalk_smollm3_smol_magpie_ultra_no_think": 30000, "hermes3": 25000, "OpenHermes_2.5_no_think": 15000,
+              "OpenThoughts3_1.2M_no_think_no_think": 15000, "tulu_3_sft_personas_instruction_following_no_think": 15000,
+              "smoltalk_smollm3_systemchats_30k_no_think": 15000, "smoltalk_smollm3_smol_summarize_no_think": 12000,
+              "smoltalk_smollm3_smol_rewrite_no_think": 10000, "smoltalk_smollm3_explore_instruct_rewriting_no_think": 8000,
+              "Mixture_of_Thoughts_science_no_think": 8000, "kisoku2_shortqa": 18000}
+
+
+def stream_gen2(cat):
+    """Turn generator records into training rows. Thinking traces become '<think>...</think>' ONLY under a system prompt that
+    ends with /think (plain-text tags, off by default). Tool conversations get the fixed tool system prompt; a tool result is
+    stored as a flagged user turn (see the module docstring). Short Q/A pairs become single turns, short multi-question chats,
+    and no-tool-needed examples (a tool list in the system prompt, a direct answer)."""
+    path = f"{GEN2_DIR}/{cat}.jsonl"
+    if not os.path.exists(path):
+        return
+    rng = random.Random(f"gen2-{cat}")
+    pool = None
+    for line in open(path):
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        src = f"kisoku2_{cat}"
+        stats[src]["seen"] += 1
+        if cat == "shortqa":
+            pairs = r["pairs"]
+            if pool is None:
+                pool = [json.loads(l)["messages"][0]["content"] for l in open(f"{PARTS}/xlam_traces_no_think.jsonl")][:4000]
+            k = rng.random()
+            if k < 0.25 and len(pairs) >= 3:  # one short multi-question chat
+                m = []
+                for q in pairs[: rng.randint(3, 5)]:
+                    m += [{"role": "user", "content": q["q"]}, {"role": "assistant", "content": q["a"]}]
+                yield {"messages": m, "source": src}
+            else:
+                for q in pairs:
+                    m = [{"role": "user", "content": q["q"]}, {"role": "assistant", "content": q["a"]}]
+                    if k >= 0.65:  # tools are available, the question does not need one
+                        yield {"messages": [{"role": "system", "content": rng.choice(pool)}] + m, "source": src + "_tools"}
+                    else:
+                        yield {"messages": m, "source": src}
+        elif cat == "tools":
+            m = [{"role": "system", "content": TOOL_SYSTEM % json.dumps(r["tools"], ensure_ascii=False), "tool": False}]
+            m += [{"role": "user" if x["role"] == "tool" else x["role"], "content": x["content"], "tool": x["role"] == "tool"} for x in r["messages"]]
+            yield {"messages": m, "source": src}
+        elif cat.startswith("think"):
+            # The teacher's own reasoning traces turned out telegraphic and full of notes about our formatting instructions
+            # ("We need answer simple ... Need brief working final short"), so they are NOT used as thinking data. The answers
+            # were checked (math against the dataset reference, logic by an independent re-solve), so they are kept as plain
+            # worked answers. Thinking-mode data comes from SmolTalk2's think splits instead (stream_think).
+            yield {"messages": r["messages"], "source": src.replace("think_", "verified_")}
+        else:
+            yield {"messages": r["messages"], "source": src}
+
+
+THINK_SPLITS = {"smoltalk_everyday_convs_reasoning_Qwen3_32B_think": 6000, "smoltalk_systemchats_Qwen3_32B_think": 6000,
+                "multi_turn_reasoning_if_think": 3000, "table_gpt_Qwen3_32B_think": 2000, "s1k_1.1_think": None}
+EMOJI = re.compile("[\U0001F000-\U0001FAFF\u2600-\u27BF]")
+THINK_OK = re.compile(r"^\s*<think>.*?</think>\s*\S", re.S)
+
+
+def stream_think(split):
+    """Thinking mode: SmolTalk2 conversations whose assistant turns open with a <think>...</think> block (traces by Qwen3-32B and
+    others). They are only ever shown under a system prompt ending in /think, so the model thinks when asked to and not otherwise."""
+    rng = random.Random(f"think-{split}")
+    for row in load_dataset("HuggingFaceTB/smoltalk2", "SFT", split=split, streaming=True):
+        stats[split]["seen"] += 1
+        kw = row.get("chat_template_kwargs") or {}
+        msgs = [m for m in row["messages"] if m.get("role") != "system"]
+        ok = len(msgs) >= 2 and len(msgs) % 2 == 0
+        out = []
+        for j, m in enumerate(msgs):
+            c = (m.get("content") or "").strip()
+            if m.get("role") != ("assistant" if j % 2 else "user") or not c:
+                ok = False; break
+            if j % 2:
+                if not THINK_OK.match(c) or c.count("<think>") != 1:
+                    ok = False; break
+                final = c.split("</think>", 1)[1].lower()
+                if EMOJI.search(final):  # Kisoku's answers carry no emoji in any mode
+                    ok = False; break
+                if any(p in final for p in REFUSAL) or FOREIGN_ID.search(c):
+                    ok = False; break
+            else:
+                c = b.SLASH_THINK.sub("", c).strip() or c
+            out.append({"role": m["role"], "content": c})
+        if not ok:
+            stats[split]["drop_filtered"] += 1
+            continue
+        ci = (kw.get("custom_instructions") or "").strip()
+        sysmsg = (ci + " /think") if ci and not FOREIGN_ID.search(ci) else rng.choice(THINK_SYSTEMS)
+        stats[split]["passed_filters"] += 1
+        yield {"messages": [{"role": "system", "content": sysmsg}] + out, "source": split}
+
+
 ADDITIONS = ["kisoku_idk", "kisoku_known", "kisoku_unknown_term", "kisoku_correction", "kisoku_hold", "tools_not_needed"]
 
 
@@ -190,6 +290,12 @@ def plan():
         p[s] = ((lambda s=s: stream_tools(s)), k)
     for s in DEEPSEEK:
         p[f"deepseek_{s}"] = ((lambda s=s: stream_deepseek(s)), None)
+    if os.environ.get("THINK") == "1":
+        for sp, k in THINK_SPLITS.items():
+            p[sp] = ((lambda sp=sp: stream_think(sp)), k)
+    for c in GEN2:
+        if os.path.exists(f"{GEN2_DIR}/{c}.jsonl"):
+            p[f"kisoku2_{c}"] = ((lambda c=c: stream_gen2(c)), None)
     if os.path.isdir(f"{ROOT}/additions"):
         for s in ADDITIONS:
             p[s] = ((lambda s=s: stream_additions(s)), None)
@@ -279,16 +385,19 @@ def merge():
     os.makedirs(OUT, exist_ok=True)
     tok = get_tok()
     by = {}
+    capped = os.environ.get("MERGE_CAPS") == "1"
     for name in plan():
         with open(f"{PARTS}/{name}.jsonl") as f:
             by[name] = [json.loads(l) for l in f]
+        if capped and name in MERGE_CAPS and len(by[name]) > MERGE_CAPS[name]:
+            by[name] = random.Random(f"cap-{name}").sample(by[name], MERGE_CAPS[name])
         with open(f"{PARTS}/{name}.stats.json") as f:
             stats[name].update(json.load(f))
 
     ds_prompts = {first_user(ex) for n, rows in by.items() if n.startswith("deepseek_") for ex in rows}
     examples = []
     for name, rows in by.items():
-        if not name.startswith("deepseek_") and name not in TOOLS and name not in ADDITIONS:
+        if not name.startswith(("deepseek_", "kisoku2_")) and name not in TOOLS and name not in ADDITIONS and name not in THINK_SPLITS:
             keep = [ex for ex in rows if first_user(ex) not in ds_prompts]
             stats[name]["drop_same_prompt_as_deepseek"] = len(rows) - len(keep)
             rows = keep
@@ -296,8 +405,11 @@ def merge():
 
     examples = drop_eval_overlap(examples)
 
-    with open(IDENTITY) as f:
-        ident = [json.loads(l) for l in f]
+    # identity.jsonl (the September hand-made set) is skipped when IDENTITY=none: the teacher-written persona conversations replace it
+    ident = []
+    if os.environ.get("IDENTITY") != "none":
+        with open(IDENTITY) as f:
+            ident = [json.loads(l) for l in f]
     for ex in ident:
         assert length_ok(tok, ex)
     stats["kisoku_identity"]["kept"] = len(ident)

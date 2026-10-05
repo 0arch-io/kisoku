@@ -24,43 +24,11 @@ rng = random.Random(99)
 TURN = lambda role: f"<|eot_id|><|start_header_id|>{role}<|end_header_id|>\n\n"
 held = lambda q: int(hashlib.md5(q.encode()).hexdigest(), 16) % 50 == 0
 
-IDK = [
-    "I don't know that one for certain, and I'd rather not guess. A quick search would give you a reliable answer.",
-    "I'm not sure. I don't have reliable information on that, so anything I said would be a guess.",
-    "I don't have a confident answer for that. It's specific enough that I could easily get it wrong, so it's worth checking a reliable source.",
-    "That's outside what I know reliably. I could make up something that sounds right, but that wouldn't help you. A search or a reference source is the better bet here.",
-    "I'm not certain about that, and I don't want to give you a wrong answer. If you can share some context, I can help you reason about it.",
-    "I don't know. I'd be guessing, and a wrong answer stated confidently is worse than no answer.",
-]
-IDK_SUBJ = [
-    "I'm not sure about {s}. I don't have reliable details on that, so I'd rather not guess.",
-    "I don't have dependable information about {s}. Anything I told you would be a guess, so it's better to check a reliable source.",
-    "I don't know enough about {s} to answer that correctly. I'd rather say so than make something up.",
-    "I can't answer that reliably. {s} isn't something I have solid information on.",
-]
-UNFAMILIAR = [
-    "I'm not familiar with {s}. It could be something niche, or something I just don't have information about. If you tell me where you came across it, I can try to help.",
-    "I don't recognize {s}. Rather than guess, I'd ask: can you give me a bit of context, like the field it's from or where you saw it?",
-    "I don't have reliable information about {s}. I could invent a description that sounds plausible, but it would likely be wrong. What do you already know about it?",
-    "{s} isn't something I know. It may be too specific or too new for me. If you share a few details, I can help you make sense of them.",
-    "I'm not sure what {s} is, and I don't want to make something up. Could you tell me more about it?",
-]
-CORRECT_USER = ["That's not right. It's {g}.", "No, the answer is {g}.", "I think that's wrong. I checked and it's {g}.", "Actually, it's {g}.",
-                "That's wrong, it's {g}.", "Hmm, I looked it up and the answer is {g}."]
-CORRECT_ASST = [
-    "You're right, I got that wrong. The correct answer is {g}. Thanks for the correction.",
-    "Thanks for catching that. I was wrong: it's {g}.",
-    "My mistake. The answer is {g}, and what I said before was incorrect.",
-    "You're right, and I'm sorry for the error. It's {g}, not what I told you.",
-    "I got that wrong. The right answer is {g}. Thanks for checking and letting me know.",
-]
-PUSH_USER = ["That's not right. It's {a}.", "No, the answer is {a}.", "I think that's wrong, it's {a}.", "Actually, it's {a}."]
-HOLD_ASST = [
-    "I don't think that's right. As far as I know, the answer is {g}, not {a}. If you have a source that says otherwise, I'm happy to look at it.",
-    "I'd stick with {g}. I don't believe {a} is correct here, though I could be missing something. Where did you see that?",
-    "I understand the doubt, but I'm fairly confident it's {g} rather than {a}. It's worth double-checking with a reliable source if it matters.",
-    "I don't want to just agree if I think it's wrong. To my knowledge the answer is {g}. If you've seen {a} somewhere reliable, tell me and I'll reconsider.",
-]
+# Every reply phrasing comes from the teacher model (gen_templates.py -> data/gen2/_templates.json), not from hand-written strings.
+# HOLD_ASST and CORRECT_ASST were machine-checked for direction (24 of 50 hold phrasings had the two answers swapped and were dropped).
+_T = json.load(open(os.environ.get("TEMPLATES", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "gen2", "_templates.json"))))
+IDK, IDK_SUBJ, UNFAMILIAR = _T["IDK"], _T["IDK_SUBJ"], _T["UNFAMILIAR"]
+CORRECT_USER, CORRECT_ASST, PUSH_USER, HOLD_ASST = _T["CORRECT_USER"], _T["CORRECT_ASST"], _T["PUSH_USER"], _T["HOLD_ASST"]
 first_sentence = lambda t: re.split(r"(?<=[.!?])\s", t.strip().split("\n")[0], maxsplit=1)[0].strip()
 clean_gold = lambda g: g.strip() if 2 <= len(g.strip()) <= 60 and not re.search(r"[\[\]{}<>|]", g) else None
 
@@ -104,9 +72,9 @@ def main():
         multiword = bool(subj) and len(subj.split()) >= 2
         if q["grade"] == "wrong":
             if k == "def":
-                if multiword and n["idk_def"] < 1500:
+                if multiword and n["idk_def"] < 900:
                     n["idk_def"] += 1; add("kisoku_idk", q["q"], rng.choice(UNFAMILIAR).format(s=subj))
-            elif n["idk_" + k] < (1500 if k == "attr" else 1000):
+            elif n["idk_" + k] < (900 if k == "attr" else 600):
                 n["idk_" + k] += 1
                 add("kisoku_idk", q["q"], rng.choice(IDK_SUBJ).format(s=subj) if (multiword and rng.random() < 0.5) else rng.choice(IDK))
             elif g and k in ("attr", "nq") and q["answer"] and n["corr"] < 1200:
@@ -126,7 +94,7 @@ def main():
                     add("kisoku_hold", q["q"] + TURN("assistant") + fs + TURN("user") + rng.choice(PUSH_USER).format(a=a), rng.choice(HOLD_ASST).format(g=g, a=a))
                     continue
             n["known"] += 1; add("kisoku_known", q["q"], fs)
-    for question, t in invented_terms(800):
+    for question, t in invented_terms(500):
         add("kisoku_unknown_term", question, rng.choice(UNFAMILIAR).format(s=t))
 
     # tools offered but not needed: a real tool list in the system prompt, an ordinary question, a direct answer
@@ -141,7 +109,7 @@ def main():
         rows = [json.loads(l) for l in open(f"{PARTS}/{name}.jsonl")]
         rows = [r for r in rows if len(r["messages"]) == 2 and r["n_tokens"] < 1200]
         plain += rng.sample(rows, min(len(rows), 700))
-    for r in rng.sample(plain, min(len(plain), 3000)):
+    for r in rng.sample(plain, min(len(plain), 1500)):
         S["tools_not_needed"].append({"messages": [{"role": "system", "content": rng.choice(tools_sys)}] + [{"role": m["role"], "content": m["content"]} for m in r["messages"]], "source": "tools_not_needed"})
 
     for src, rows in S.items():
