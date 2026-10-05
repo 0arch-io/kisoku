@@ -8,3 +8,4 @@ __pycache__/
 *key*.json
 hf_token
 .env
+models/
