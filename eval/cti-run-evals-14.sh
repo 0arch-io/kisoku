@@ -48,13 +48,16 @@ run() { local name=$1 pre=$2 tasks=$3 fs=$4 bs=$5; shift 5
   ls $R/$name/*/results_*.json >/dev/null 2>&1 && echo "--- $(date -u) $name done" >> $LOG || echo "--- $(date -u) $name FAILED" >> $LOG
 }
 # mkyarn SRC DST ORIG FACTOR: a copy of a model dir (weights symlinked) whose config applies YaRN at inference
-mkyarn() { [ -f $2/config.json ] && return; mkdir -p $2 && for f in $1/*; do ln -sf $(readlink -f $f) $2/; done && rm $2/config.json && python - $1/config.json $2/config.json $3 $4 <<'PY'
+mkyarn() { [ -f $2/config.json ] && return; mkdir -p $2 && for f in $1/*; do ln -sf $(readlink -f $f) $2/; done && rm $2/config.json && python - $1/config.json $2/config.json $3 $4 ${5:-} <<'PY'
 import json, sys
+sys.argv = [a for a in sys.argv if a != '']
 c = json.load(open(sys.argv[1])); orig = int(sys.argv[3]); f = float(sys.argv[4])
 theta = (c.get('rope_parameters') or {}).get('rope_theta', c.get('rope_theta', 1000000))
 c['rope_parameters'] = {'rope_theta': theta, 'rope_type': 'yarn', 'factor': f, 'original_max_position_embeddings': orig}
 c['rope_scaling'] = {'rope_type': 'yarn', 'factor': f, 'original_max_position_embeddings': orig}
-c['max_position_embeddings'] = int(orig * f)
+if len(sys.argv) > 5:  # optional explicit attention factor (YaRN's logit sharpening), to separate it from the frequency rescaling
+    c['rope_parameters']['attention_factor'] = float(sys.argv[5]); c['rope_scaling']['attention_factor'] = float(sys.argv[5])
+c['max_position_embeddings'] = max(int(orig * f), orig)
 json.dump(c, open(sys.argv[2], 'w'), indent=2)
 PY
 }
@@ -86,6 +89,10 @@ case $1 in
   L) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-ctiplain $P 65536 50
      mkyarn $P $M/kisoku-longC-yarn1.5 65536 1.5; ruler kisoku-longC-yarn1.5 $M/kisoku-longC-yarn1.5 65536 50
      mkyarn $P $M/kisoku-longC-yarn4 65536 4; ruler kisoku-longC-yarn4 $M/kisoku-longC-yarn4 65536 50 ;;
+  # P: split YaRN's two parts on Kisoku at 64K. HF YaRN (factor 2) = (a) rescaled low frequencies + (b) an attention factor
+  #    0.1*ln(2)+1 = 1.0693 multiplied into cos/sin (sharper attention). "interp" keeps (a) only, "temp" keeps (b) only.
+  P) export CUDA_VISIBLE_DEVICES=2; mkyarn $P $M/kisoku-longC-yarn2-interp 65536 2 1.0; ruler kisoku-longC-yarn2-interp $M/kisoku-longC-yarn2-interp 65536 50
+     mkyarn $P $M/kisoku-longC-yarn-temp 65536 1.0001 1.0693; ruler kisoku-longC-yarn-temp $M/kisoku-longC-yarn-temp 65536 50 ;;
   N) export CUDA_VISIBLE_DEVICES=1; hub Qwen/Qwen3-1.7B-Base qwen3-1.7b; mkyarn $M/qwen3-1.7b $M/qwen3-1.7b-yarn2 32768 2
      ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 32768 50; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 16384 50; ruler qwen3-1.7b-ctiplain $M/qwen3-1.7b 32768 50; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 65536 50 ;;
   O) export CUDA_VISIBLE_DEVICES=2; hub Qwen/Qwen3-0.6B-Base qwen3-0.6b; mkyarn $M/qwen3-0.6b $M/qwen3-0.6b-yarn2 32768 2
