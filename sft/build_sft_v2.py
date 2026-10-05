@@ -227,7 +227,9 @@ def stream_gen2(cat):
             # worked answers. Thinking-mode data comes from SmolTalk2's think splits instead (stream_think).
             yield {"messages": r["messages"], "source": src.replace("think_", "verified_")}
         else:
-            yield {"messages": r["messages"], "source": src}
+            # the greeting set came out small (the teacher account ran out of credit at 404 conversations), so it is repeated
+            for _ in range(3 if cat == "greet" else 1):
+                yield {"messages": [dict(m) for m in r["messages"]], "source": src}
 
 
 THINK_SPLITS = {"smoltalk_everyday_convs_reasoning_Qwen3_32B_think": 6000, "smoltalk_systemchats_Qwen3_32B_think": 6000,
