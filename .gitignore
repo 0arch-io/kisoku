@@ -9,3 +9,4 @@ __pycache__/
 hf_token
 .env
 models/
+data/
