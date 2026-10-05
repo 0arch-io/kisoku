@@ -67,7 +67,7 @@ warmup_steps_fraction: 0.03
 skip_step_on_spikes: False
 
 # ---- batch / sharding (v4-32: 16 chips) ----
-per_device_batch_size: 2
+per_device_batch_size: 1  # 16 x 8192 = 131K tokens per step, same as the preview run (which used 2 x 4096)
 gradient_accumulation_steps: 1
 ici_fsdp_parallelism: 16
 
