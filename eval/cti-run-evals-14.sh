@@ -33,7 +33,7 @@ run() { local name=$1 pre=$2 tasks=$3 fs=$4 bs=$5; shift 5
   ls $R/$name/*/results_*.json >/dev/null 2>&1 && { echo "--- skip $name" >> $LOG; return; }
   echo "--- $(date -u) $name tasks=$tasks fewshot=$fs bs=$bs" >> $LOG
   local fsarg=(); [ "$fs" != "default" ] && fsarg=(--num_fewshot "$fs")
-  lm_eval --model hf --model_args "pretrained=$pre,dtype=bfloat16" --include_path /models/kisoku-eval/tasks --tasks "$tasks" "${fsarg[@]}" \
+  lm_eval --model hf --model_args "pretrained=$pre,dtype=${DT:-bfloat16}" --include_path /models/kisoku-eval/tasks --tasks "$tasks" "${fsarg[@]}" \
     --batch_size "$bs" --output_path "$R/$name" --log_samples "$@" >> $LOG 2>&1
   ls $R/$name/*/results_*.json >/dev/null 2>&1 && echo "--- $(date -u) $name done" >> $LOG || echo "--- $(date -u) $name FAILED" >> $LOG
 }
@@ -41,7 +41,9 @@ echo "=== STREAM $1 START $(date -u)" >> $LOG
 case $1 in
   A) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC $P 32768 50; ruler kisoku-longC $P 16384 50 ;;
   B) export CUDA_VISIBLE_DEVICES=2; ruler llama-3.2-1b-ctisanity unsloth/Llama-3.2-1B 4096 100; ruler kisoku-longC $P 4096 100; ruler kisoku-longC $P 8192 100; ruler kisoku-longC-yarn2 $Y 4096 100 ;;
-  C) export CUDA_VISIBLE_DEVICES=1; run kisoku-v1-core $V1 "hellaswag,arc_easy,arc_challenge,piqa,winogrande" 0 16; run kisoku-v1-gsm8k $V1 gsm8k 5 16
+  # v1 runs in float32: its logits are tiny (untrained special rows sit at logit 0 above every real token) and bfloat16
+  # rounding turns generation into "!!!!" (HumanEval 0.0, found 2026-10-05). The bf16 results are kept as results/_bf16-kisoku-v1-*.
+  C) export CUDA_VISIBLE_DEVICES=1 DT=float32; run kisoku-v1-core $V1 "hellaswag,arc_easy,arc_challenge,piqa,winogrande" 0 16; run kisoku-v1-gsm8k $V1 gsm8k 5 16
      run kisoku-v1-bbhws $V1 bbh_ws default 8; run kisoku-v1-triviaqa $V1 triviaqa 5 8; run kisoku-v1-mmlu $V1 mmlu 5 8 ;;
   D) export CUDA_VISIBLE_DEVICES=1; ruler kisoku-longC-yarn2 $Y 65536 50 ;;
 esac

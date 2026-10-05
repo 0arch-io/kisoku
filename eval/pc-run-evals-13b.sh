@@ -1,5 +1,5 @@
 #!/bin/bash
-# Batch 13 (2026-10-05): Kisoku v1 (0arch-io/kisoku-3b-base, 3B, ~60B training tokens, early 2026) through the same short-eval
+# Batch 13b (2026-10-05, HumanEval only; the other v1 tests ran on the CTI box in batch 14): Kisoku v1 (0arch-io/kisoku-3b-base, 3B, ~60B training tokens, early 2026) through the same short-eval
 # harness as the scorecard, to show v1 -> v2 growth. Waits for batch 12 (tmux kisoku-eval12) so only one model is on the GPU.
 # v1 runs in float32: bfloat16 rounding breaks its tiny logits (generation becomes "!!!!", HumanEval 0.0; found 2026-10-05).
 # v1 quirk: it was trained with vocab_size 128000, so the 256 special-token rows are untrained zeros and can win greedy decoding.
@@ -8,8 +8,9 @@
 export PATH=/usr/lib/wsl/lib:$HOME/ai/bin:$PATH
 export HF_ALLOW_CODE_EVAL=1 TOKENIZERS_PARALLELISM=false
 R=~/kisoku-eval/results; M=~/kisoku-eval/models; LOG=~/logs/kisoku-eval.log; V1=$M/kisoku-v1-3b-base
-while tmux has-session -t kisoku-eval12 2>/dev/null; do sleep 120; done
-echo "=== BATCH 13 (Kisoku v1 short evals) START $(date -u)" >> $LOG
+
+[ -d $R/kisoku-v1-humaneval ] && grep -q bfloat16 $R/kisoku-v1-humaneval/*/results_*.json 2>/dev/null && mv $R/kisoku-v1-humaneval $R/_bf16-kisoku-v1-humaneval
+echo "=== BATCH 13b (Kisoku v1 short evals) START $(date -u)" >> $LOG
 if [ ! -f $V1/model.safetensors ]; then
   ~/ai/bin/python - <<PY >> $LOG 2>&1
 from huggingface_hub import snapshot_download
@@ -33,10 +34,5 @@ run() { local name=$1 pre=$2 tasks=$3 fs=$4 bs=$5; shift 5
   ls $R/$name/*/results_*.json >/dev/null 2>&1 && echo "--- $(date -u) $name done" >> $LOG || echo "--- $(date -u) $name FAILED (no results file)" >> $LOG
 }
 n=kisoku-v1
-run "$n-core" $V1 "hellaswag,arc_easy,arc_challenge,piqa,winogrande" 0 16
-run "$n-gsm8k" $V1 "gsm8k" 5 16
 run "$n-humaneval" $V1 "humaneval" 0 16 --confirm_run_unsafe_code
-run "$n-bbhws" $V1 "bbh_ws" default 8
-run "$n-triviaqa" $V1 "triviaqa" 5 8
-run "$n-mmlu" $V1 "mmlu" 5 8
-echo "=== BATCH 13 DONE $(date -u)" >> $LOG
+echo "=== BATCH 13b DONE $(date -u)" >> $LOG
