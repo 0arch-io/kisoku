@@ -298,7 +298,21 @@ The lesson is that abstention and coverage trade off at this size. Data telling 
 
 **A testing lesson.** Replaying the conversation that motivated new training data is not a test, because the data was written to fix exactly that conversation. The planned next step, not done yet, is a held-out conversation stress test with a simulated user and an automatic grader.
 
-**Benchmarks.** [TBD: chat model scores on the base suite] (running). [TBD: chat model long-context scores.]
+**Benchmarks.** Chat training did not cost the model its benchmark scores overall. The pass 5 chat model on the same base-style tests (no chat template, same harness), against the base model's scores from the scorecard:
+
+| Test | Base | Chat, pass 5 |
+|---|---|---|
+| GSM8K | 15.3 | 19.6 |
+| ARC-Easy | 65.4 | 67.1 |
+| ARC-Challenge | 39.8 | 42.7 |
+| WinoGrande | 57.3 | 58.0 |
+| PIQA | 73.9 | 73.6 |
+| HellaSwag | 57.7 | 57.3 |
+| TriviaQA | 22.8 | 21.5 |
+| MMLU | 33.0 | 29.8 |
+| BBH | 29.2 | 25.2 |
+
+Math and science questions went up, MMLU and BBH went down by 3 to 4 points, and the rest moved by less than a point. The base column is the stage 3 checkpoint, before long-context training, so part of each difference may come from that training and not from chat fine-tuning. [TBD: short-context rerun on the final long-context checkpoint, which would separate the two.] [TBD: chat model long-context scores.]
 
 ## 8. What went wrong
 
