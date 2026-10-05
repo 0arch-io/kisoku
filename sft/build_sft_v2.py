@@ -170,6 +170,18 @@ def stream_deepseek(name):
         b.REFUSAL[:] = saved
 
 
+ADDITIONS = ["kisoku_idk", "kisoku_known", "kisoku_unknown_term", "kisoku_correction", "kisoku_hold", "tools_not_needed"]
+
+
+def stream_additions(name):
+    """Second-pass additions written by build_additions.py (already in final form, no filtering). Skipped when absent."""
+    path = f"{ROOT}/additions/{name}.jsonl"
+    if os.path.exists(path):
+        for line in open(path):
+            stats[name]["seen"] += 1
+            yield json.loads(line)
+
+
 def plan():
     p = {s: ((lambda s=s: b.stream_smoltalk(s)), k) for s, k in SMOLTALK2.items()}
     p["hermes3"] = (b.stream_hermes, HERMES_TARGET)
@@ -178,6 +190,9 @@ def plan():
         p[s] = ((lambda s=s: stream_tools(s)), k)
     for s in DEEPSEEK:
         p[f"deepseek_{s}"] = ((lambda s=s: stream_deepseek(s)), None)
+    if os.path.isdir(f"{ROOT}/additions"):
+        for s in ADDITIONS:
+            p[s] = ((lambda s=s: stream_additions(s)), None)
     return p
 
 
@@ -273,7 +288,7 @@ def merge():
     ds_prompts = {first_user(ex) for n, rows in by.items() if n.startswith("deepseek_") for ex in rows}
     examples = []
     for name, rows in by.items():
-        if not name.startswith("deepseek_") and name not in TOOLS:
+        if not name.startswith("deepseek_") and name not in TOOLS and name not in ADDITIONS:
             keep = [ex for ex in rows if first_user(ex) not in ds_prompts]
             stats[name]["drop_same_prompt_as_deepseek"] = len(rows) - len(keep)
             rows = keep
