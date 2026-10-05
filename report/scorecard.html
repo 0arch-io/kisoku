@@ -15,6 +15,7 @@
     --ours: #ffffff;
     --other: #55565c;
     --prev: #8e8f96;
+    --row: #1b1b1d;
     --font-display: "Newsreader", Georgia, "Times New Roman", serif;
     --font-ui: "Geist", "Helvetica Neue", Arial, sans-serif;
     --font-num: "Geist Mono", ui-monospace, Menlo, monospace;
@@ -32,25 +33,26 @@
   .chart { background: var(--panel); padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 4px; }
   .chart h2 { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
   .chart p { margin: 0; font-size: 12.5px; color: var(--ink-3); }
-  .plot { position: relative; height: 210px; margin-top: 30px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; align-items: end; border-bottom: 1px solid #3a3a3d;
+  .plot { position: relative; height: 210px; margin-top: 30px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; border-bottom: 1px solid #3a3a3d;
           background-image: linear-gradient(var(--grid), var(--grid)), linear-gradient(var(--grid), var(--grid)); background-size: 100% 1px, 100% 1px; background-position: 0 0, 0 50%; background-repeat: no-repeat; }
   .col { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; outline: none; }
   .col .num { font-family: var(--font-num); font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
   .col.ours .num { color: var(--ink); font-size: 17px; font-weight: 500; }
   .col .bar { width: 100%; max-width: 46px; border-radius: 4px 4px 0 0; background: var(--other); transition: opacity .15s; }
   .col.prev .bar { background: var(--prev); }
+  .col.old .bar { background: repeating-linear-gradient(135deg, var(--prev) 0 3px, transparent 3px 6px); min-height: 2px; }
   .col.ours .bar { background: var(--ours); }
   .col.wait .bar { height: 34px; background: transparent; border: 1px dashed #4a4a4e; border-bottom: 0; }
   .col.wait .num { font-size: 10.5px; color: var(--ink-3); }
   .plot:hover .col:not(:hover) .bar { opacity: .55; }
   .col:focus-visible .bar { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .names { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 8px; }
+  .names { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 8px; }
   .names span { font-size: 11px; line-height: 1.25; text-align: center; color: var(--ink-3); }
   .names span.ours { color: var(--ink); font-weight: 500; }
   .scale { font-family: var(--font-num); font-size: 10px; color: var(--ink-3); margin-top: 10px; }
   section > h3 { margin: 0 0 16px; font-family: var(--font-display); font-weight: 400; font-size: 28px; letter-spacing: -0.01em; }
   .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
-  table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 740px; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 860px; }
   th, td { padding: 14px 18px; text-align: center; border-bottom: 1px solid var(--line); }
   th:first-child, td:first-child { text-align: left; }
   thead th { font-size: 13.5px; font-weight: 500; color: var(--ink-2); vertical-align: bottom; }
@@ -65,6 +67,9 @@
   td.best { color: var(--ink); font-weight: 500; }
   td.best::after { content: ""; display: block; width: 18px; height: 2px; background: var(--ink); margin: 3px auto 0; }
   td.na { color: var(--ink-3); font-size: 12px; }
+  tr.ours td { background: var(--row); color: var(--ink); }
+  tr.ours td:first-child { box-shadow: inset 2px 0 0 var(--ink); }
+  .intro { margin: -6px 0 16px; color: var(--ink-2); font-size: 15px; max-width: 70ch; }
   .notes { color: var(--ink-3); font-size: 13px; max-width: 80ch; display: flex; flex-direction: column; gap: 6px; }
   .notes p { margin: 0; }
   #tip { position: fixed; pointer-events: none; background: #ffffff; color: #0c0c0d; font-size: 12.5px; padding: 6px 9px; border-radius: 6px; z-index: 5; max-width: 240px; }
@@ -73,12 +78,13 @@
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">0ARCH &middot; Kisoku 1.6B &middot; 1 Oct 2026</div>
+    <div class="eyebrow">0ARCH &middot; Kisoku 1.6B &middot; 5 Oct 2026</div>
     <h1>Kisoku ties Meta's Llama 3.2 1B on one eighteenth of the training data</h1>
-    <p class="lede">Trained on about 500 billion tokens, against Llama's 9 trillion and Qwen's 18 trillion. Across ten tests Kisoku and Llama win five each: Kisoku leads on math, knowledge, science and reasoning, Llama on common sense, coding and fact recall. The larger SmolLM2 and Qwen2.5 lead both on most tests. Scores are the percent of questions answered correctly, with every model run through the same harness on the same machine.</p>
+    <p class="lede">Trained on about 500 billion tokens, against Llama's 9 trillion and Qwen's 18 trillion. Across ten tests Kisoku and Llama win five each: Kisoku leads on math, knowledge, science and reasoning, Llama on common sense, coding and fact recall. The larger SmolLM2 and Qwen2.5 lead both on most tests. The first Kisoku, a 3B model from early 2026, scored near guessing level on the same tests, and the new one is half its size. Scores are the percent of questions answered correctly, with every model run through the same harness on the same machine.</p>
     <div class="key">
       <span><i style="background:var(--ours)"></i>Kisoku 1.6B (new base)</span>
       <span><i style="background:var(--prev)"></i>Kisoku Preview</span>
+      <span><i style="background:repeating-linear-gradient(135deg, var(--prev) 0 3px, transparent 3px 6px)"></i>Kisoku v1 (3B)</span>
       <span><i style="background:var(--other)"></i>Other labs</span>
     </div>
   </header>
@@ -90,9 +96,17 @@
     <div class="tablewrap"><table id="table"></table></div>
   </section>
 
+  <section>
+    <h3>Long context</h3>
+    <p class="intro">RULER asks a model to find, track and combine facts buried in long text, and the score is the average over its 13 tasks. Kisoku was pretrained at 4K tokens, then extended to 64K, and runs to 128K with YaRN scaling. It is ahead of Llama 3.2 1B at 4K, 16K, 32K and 64K, level at 128K and behind at 8K. Granite and the Qwen3.5 models stay ahead at every length.</p>
+    <div class="tablewrap"><table id="ruler"></table></div>
+  </section>
+
   <div class="notes">
     <p>Base (non-chat) checkpoints, lm-evaluation-harness 0.4.13, bfloat16, one RTX 4090. HellaSwag, ARC, PIQA and WinoGrande are 0-shot; MMLU, GSM8K and TriviaQA are 5-shot; BBH is 3-shot with exact match after trimming whitespace; HumanEval is pass@1. A short rule under a table value marks the best score in that row.</p>
     <p>SmolLM2's HumanEval run returned 0.6%, which is a harness problem (its generations never stop), not its real score, so it is left out. Qwen2.5's BBH score is reported as the harness gave it. Parameters: Kisoku 1.6B, Llama 3.2 1B 1.24B, Gemma 3 1B 1.0B, SmolLM2 1.7B, Qwen2.5 1.5B. Each chart has its own vertical scale, printed beneath it.</p>
+    <p>Kisoku v1 is the public kisoku-3b-base checkpoint (3B parameters, about 60 billion training tokens). It is scored in float32 because bfloat16 rounding breaks its output, and it needs its 256 untrained special tokens suppressed to generate at all. Its MMLU run had not finished when this page was updated.</p>
+    <p>Long context: lm-evaluation-harness RULER, 100 samples per task at 4K and 8K and 50 above, answers capped at 128 new tokens, same settings for every model. Kisoku is the long-context checkpoint with the YaRN x2 config at every length. Runs were split across an RTX 4090 and an RTX PRO 6000, and Llama 3.2 1B at 4K scored 73.5 on one and 73.7 on the other. Empty cells: Qwen3 1.7B and Gemma 3 1B ran out of GPU memory, and the other 32K-native models were not run at 128K after falling apart at 64K.</p>
   </div>
 </div>
 <div id="tip" hidden></div>
@@ -101,22 +115,23 @@
 const MODELS = [
   { key: "k3", name: "Kisoku 1.6B", sub: "0ARCH, new base", cls: "ours" },
   { key: "k1", name: "Kisoku Preview", sub: "0ARCH, Sept 22", cls: "prev" },
+  { key: "v1", name: "Kisoku v1", sub: "0ARCH, 3B, early 2026", cls: "old" },
   { key: "ll", name: "Llama 3.2 1B", sub: "Meta", cls: "" },
   { key: "ge", name: "Gemma 3 1B", sub: "Google", cls: "" },
   { key: "sm", name: "SmolLM2 1.7B", sub: "Hugging Face", cls: "" },
   { key: "qw", name: "Qwen2.5 1.5B", sub: "Alibaba", cls: "" },
 ];
 const TESTS = [
-  { id: "GSM8K", what: "Grade-school math", max: 80, k3: 15.3, k1: 6.4, ll: 5.8, ge: 2.0, sm: 30.0, qw: 60.7 },
-  { id: "MMLU", what: "General knowledge", max: 80, k3: 33.0, k1: 33.2, ll: 31.3, ge: 26.5, sm: 50.0, qw: 60.9 },
-  { id: "ARC-Easy", what: "Science questions", max: 80, k3: 65.4, k1: 64.1, ll: 61.8, ge: 72.1, sm: 73.5, qw: 72.1 },
-  { id: "ARC-Challenge", what: "Hard science questions", max: 50, k3: 39.8, k1: 39.4, ll: 36.9, ge: 38.0, sm: 46.9, qw: 45.2 },
-  { id: "PIQA", what: "Physical common sense", max: 80, k3: 73.9, k1: 73.1, ll: 74.9, ge: 74.7, sm: 77.9, qw: 75.6 },
-  { id: "WinoGrande", what: "Pronoun reasoning", max: 80, k3: 57.3, k1: 57.3, ll: 60.5, ge: 59.2, sm: 66.3, qw: 62.9 },
-  { id: "HellaSwag", what: "Sentence completion", max: 80, k3: 57.7, k1: 56.9, ll: 64.2, ge: 62.1, sm: 71.3, qw: 67.8 },
-  { id: "HumanEval", what: "Python coding", max: 40, k3: 13.4, k1: 9.1, ll: 18.9, ge: 6.7, sm: null, qw: 37.2 },
-  { id: "BBH", what: "Multi-step reasoning", max: 40, k3: 29.2, k1: 28.2, ll: 28.3, ge: 28.4, sm: 31.4, qw: 21.4 },
-  { id: "TriviaQA", what: "Fact recall", max: 60, k3: 22.8, k1: 22.4, ll: 40.7, ge: 35.7, sm: 49.7, qw: 39.7 },
+  { id: "GSM8K", what: "Grade-school math", max: 80, k3: 15.3, k1: 6.4, v1: 0.0, ll: 5.8, ge: 2.0, sm: 30.0, qw: 60.7 },
+  { id: "MMLU", what: "General knowledge", max: 80, k3: 33.0, k1: 33.2, v1: null, ll: 31.3, ge: 26.5, sm: 50.0, qw: 60.9 },
+  { id: "ARC-Easy", what: "Science questions", max: 80, k3: 65.4, k1: 64.1, v1: 27.1, ll: 61.8, ge: 72.1, sm: 73.5, qw: 72.1 },
+  { id: "ARC-Challenge", what: "Hard science questions", max: 50, k3: 39.8, k1: 39.4, v1: 24.6, ll: 36.9, ge: 38.0, sm: 46.9, qw: 45.2 },
+  { id: "PIQA", what: "Physical common sense", max: 80, k3: 73.9, k1: 73.1, v1: 54.1, ll: 74.9, ge: 74.7, sm: 77.9, qw: 75.6 },
+  { id: "WinoGrande", what: "Pronoun reasoning", max: 80, k3: 57.3, k1: 57.3, v1: 51.1, ll: 60.5, ge: 59.2, sm: 66.3, qw: 62.9 },
+  { id: "HellaSwag", what: "Sentence completion", max: 80, k3: 57.7, k1: 56.9, v1: 29.0, ll: 64.2, ge: 62.1, sm: 71.3, qw: 67.8 },
+  { id: "HumanEval", what: "Python coding", max: 40, k3: 13.4, k1: 9.1, v1: 0.0, ll: 18.9, ge: 6.7, sm: null, qw: 37.2 },
+  { id: "BBH", what: "Multi-step reasoning", max: 40, k3: 29.2, k1: 28.2, v1: 0.2, ll: 28.3, ge: 28.4, sm: 31.4, qw: 21.4 },
+  { id: "TriviaQA", what: "Fact recall", max: 60, k3: 22.8, k1: 22.4, v1: 0.2, ll: 40.7, ge: 35.7, sm: 49.7, qw: 39.7 },
 ];
 const fmt = v => v.toFixed(1);
 const charts = document.getElementById("charts");
@@ -134,6 +149,20 @@ table.innerHTML = `<thead><tr><th></th>${MODELS.map(m => `<th class="${m.cls ===
   const best = Math.max(...MODELS.map(m => t[m.key] ?? -1));
   return `<tr><td>${t.id}<small>${t.what}</small></td>${MODELS.map(m => { const v = t[m.key]; const oc = m.cls === "ours" ? "oc " : ""; return v == null ? `<td class="${oc}na">left out</td>` : `<td class="${oc}${v === best ? "best" : ""}">${fmt(v)}%</td>`; }).join("")}</tr>`;
 }).join("") + "</tbody>";
+const LENGTHS = ["4K", "8K", "16K", "32K", "64K", "128K"];
+const RULER = [
+  { name: "Qwen3.5 2B", sub: "Alibaba", v: [91.6, 89.7, 86.8, 83.6, 78.7, 70.7] },
+  { name: "Qwen3.5 0.8B", sub: "Alibaba", v: [86.7, 83.0, 79.2, 74.2, 68.5, 64.2] },
+  { name: "Granite 4.0 1B", sub: "IBM", v: [85.3, 77.5, 71.6, 60.7, 63.4, 46.7] },
+  { name: "Kisoku 1.6B", sub: "0ARCH, long-context checkpoint", v: [76.1, 66.2, 64.2, 58.8, 56.7, 43.2], ours: true },
+  { name: "Llama 3.2 1B", sub: "Meta", v: [73.5, 67.4, 61.9, 56.7, 49.2, 43.1] },
+  { name: "Qwen3 1.7B", sub: "Alibaba, 32K native", v: [89.4, 84.2, 78.3, 72.3, 42.1, null] },
+  { name: "Qwen3 0.6B", sub: "Alibaba, 32K native", v: [84.2, 73.5, 68.7, 59.5, 37.6, null] },
+  { name: "LFM2.5 1.2B", sub: "Liquid AI, 32K native", v: [63.1, 54.6, 43.1, 33.8, 2.6, null] },
+  { name: "Gemma 3 1B", sub: "Google, 32K native", v: [59.6, 43.8, 35.3, 27.6, null, null] },
+];
+document.getElementById("ruler").innerHTML = `<thead><tr><th></th>${LENGTHS.map(l => `<th>${l}<small>tokens</small></th>`).join("")}</tr></thead><tbody>` + RULER.map(r =>
+  `<tr class="${r.ours ? "ours" : ""}"><td>${r.name}<small>${r.sub}</small></td>${r.v.map((x, i) => x == null ? `<td class="na">not run</td>` : `<td class="${x === Math.max(...RULER.map(q => q.v[i] ?? -1)) ? "best" : ""}">${fmt(x)}</td>`).join("")}</tr>`).join("") + "</tbody>";
 const tip = document.getElementById("tip");
 const show = (el, x, y) => { tip.textContent = el.dataset.tip; tip.hidden = false; tip.style.left = Math.max(8, Math.min(x + 12, innerWidth - 250)) + "px"; tip.style.top = (y + 14) + "px"; };
 charts.addEventListener("mousemove", e => { const c = e.target.closest(".col"); c ? show(c, e.clientX, e.clientY) : (tip.hidden = true); });
