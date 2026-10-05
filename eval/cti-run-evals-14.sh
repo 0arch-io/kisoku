@@ -46,5 +46,9 @@ case $1 in
   C) export CUDA_VISIBLE_DEVICES=1 DT=float32; run kisoku-v1-core $V1 "hellaswag,arc_easy,arc_challenge,piqa,winogrande" 0 16; run kisoku-v1-gsm8k $V1 gsm8k 5 16
      run kisoku-v1-bbhws $V1 bbh_ws default 8; run kisoku-v1-triviaqa $V1 triviaqa 5 8; run kisoku-v1-mmlu $V1 mmlu 5 8 ;;
   D) export CUDA_VISIBLE_DEVICES=1; ruler kisoku-longC-yarn2 $Y 65536 50 ;;
+  # Added after YaRN x2 turned out to HELP at 64K (56.7 vs 44.7 plain) and cost nothing at 4K (76.1 vs 76.2): fill in the middle
+  # lengths so one shipped config (YaRN) has a full row.
+  E) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-yarn2 $Y 8192 100; ruler kisoku-longC-yarn2 $Y 16384 50 ;;
+  F) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-yarn2 $Y 32768 50 ;;
 esac
 echo "=== STREAM $1 DONE $(date -u)" >> $LOG
