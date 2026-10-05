@@ -1,0 +1,112 @@
+=== identity [stop, 35 tok, 0.2s]
+You're talking to Kisoku, a language model created by 0ARCH. I'm here to answer questions, write, code, and help you think things through.
+
+=== identity2 [stop, 27 tok, 0.2s]
+No, I'm not ChatGPT. My name is Kisoku. I'm a language model built by 0ARCH.
+
+=== capital [stop, 8 tok, 0.1s]
+The capital of France is Paris.
+
+=== math [stop, 59 tok, 0.4s]
+You started with 3 apples. You bought 5 more, so you now have:
+
+3 apples + 5 apples = 8 apples
+
+You then ate 2 apples, so you have:
+
+8 apples - 2 apples = 6 apples
+
+You have 6 apples left.
+
+=== math2 [stop, 84 tok, 0.7s]
+To find the distance traveled by the train, we can use the formula:
+
+Distance = Speed × Time
+
+Given that the train travels at a speed of 60 miles per hour and it travels for 2.5 hours, we can plug these values into the formula:
+
+Distance = 60 miles/hour × 2.5 hours
+Distance = 150 miles
+
+So, the train travels 150 miles.
+
+=== code [stop, 134 tok, 1.0s]
+```python
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+```
+
+This function works by checking divisibility up to the square root of `n`, as any factor larger than that would have a corresponding factor smaller than the square root. This optimization significantly reduces the number of iterations. 
+
+You can use this function like this:
+
+```python
+print(is_prime(25))  # False
+print(is_prime(23))  # True
+```
+
+=== sky [stop, 26 tok, 0.2s]
+The sky is blue because the air is filled with tiny particles called molecules, which scatter the sunlight and make it look blue.
+
+=== live-data [stop, 39 tok, 0.4s]
+I don't have access to real-time weather data, so I can't tell you what the weather is right now in Miami. Check a weather app or site like weather.gov for that.
+
+=== news [stop, 41 tok, 0.3s]
+I'm sorry, but I don't have access to real-time news updates or the ability to browse the internet. I recommend checking a reliable news source for the most recent and up-to-date headlines.
+
+=== endolift [stop, 36 tok, 0.3s]
+I don't have reliable information about Endolift. I could invent a description that sounds plausible, but it would likely be wrong. What do you already know about it?
+
+=== false-premise [stop, 81 tok, 0.7s]
+Einstein did not win the 1921 Nobel Prize for relativity. He was awarded the 1921 prize (announced in 1922) for his discovery of the law of the photoelectric effect, not for the theory of special or general relativity. The Nobel committee at the time considered relativity too controversial and not yet sufficiently proven, so they cited the photoelectric work instead.
+
+=== unknown [stop, 37 tok, 0.3s]
+I don't have dependable information about Zrnovnica in 1857. Anything I told you would be a guess, so it's better to check a reliable source.
+
+=== correction [stop, 20 tok, 0.2s]
+I got that wrong. The right answer is Canberra. Thanks for checking and letting me know.
+
+=== tool-call [stop, 25 tok, 0.3s]
+<tool_call>
+{"name": "get_weather", "arguments": {"city": "Miami"}}
+</tool_call>
+
+=== tool-result [stop, 23 tok, 0.2s]
+The weather in Miami is partly cloudy with a temperature of 88 degrees Fahrenheit. The humidity is 71%.
+
+=== tool-none [stop, 26 tok, 0.2s]
+<tool_call>
+{"name": "get_weather", "arguments": {"city": "New York"}}
+</tool_call>
+
+=== poem [stop, 196 tok, 1.6s]
+The ocean's vast, mysterious depths,
+A realm of endless wonder, untold.
+Its waves crash against the shore,
+A symphony of sound, a soothing balm.
+
+The ocean's creatures, both small and great,
+In its depths, they find a home.
+From the smallest shell to the mightiest beast,
+They thrive, in this vast, endless space.
+
+The ocean's beauty, a sight to behold,
+A reminder of life's simple joys.
+Its waves, a gentle, soothing lullaby,
+A melody that lingers in the mind.
+
+The ocean's power, a force to be reckoned with,
+A reminder of nature's might.
+Its tides, a cycle of life and death,
+A testament to the ocean's might.
+
+The ocean's secrets, a mystery to unravel,
+A puzzle to be solved, day by day.
+Its depths, a world of wonder, a place to explore,
+A realm of endless discovery, a journey to take.
+
