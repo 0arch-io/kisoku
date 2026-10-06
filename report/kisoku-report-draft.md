@@ -290,7 +290,7 @@ v1 is near guessing level on the multiple-choice tests and close to zero on the 
 
 ## 7B. Chat fine-tuning (preview)
 
-Chat fine-tuning ran from 2026-10-04 to 2026-10-05 as five passes on the TPU, each about 70 to 95 minutes at about 1.65 seconds per step and 131K tokens per step. Every pass started from the final long-context checkpoint (Phase C, step 1299) with a fresh optimizer; no pass continued from an earlier chat model. This section includes what failed. The chat model is released as a preview, not a finished assistant.
+Chat fine-tuning ran from 2026-10-04 to 2026-10-06 as nine supervised passes on the TPU, each about 70 to 95 minutes at about 1.65 seconds per step and 131K tokens per step, plus one preference-tuning (DPO) stage. Every supervised pass started from the final long-context checkpoint (Phase C, step 1299) with a fresh optimizer; no pass continued from an earlier chat model. The released chat model is pass 9. This section includes what failed. The chat model is released as a preview, not a finished assistant.
 
 **Data.** Public chat sets (SmolTalk2 subsets, Hermes 3, OpenHermes, no_robots); tool traces (xlam, Hermes function calling); a first teacher-written set of 34,879 examples from DeepSeek-V4.1-Flash; and a second teacher-written set of about 47,500 conversations written as Kisoku: everyday chat 10,000, revise-my-work 6,800, casual build requests 5,800, explanations 5,000, short question-and-answer batches 5,000, tool conversations 4,000, identity and capabilities 2,800, identity-then-task 3,000, small talk 800, literal greetings 404, and verified math and logic answers about 4,200. The second set took about 35 minutes through DeepSeek's own API at 96 concurrent requests and cost under 20 US dollars. The same model through a throttled reseller ran at about 150 tokens per second in total. Teacher policy: training targets were written only by the DeepSeek teacher or taken from public datasets.
 
@@ -305,8 +305,12 @@ Chat fine-tuning ran from 2026-10-04 to 2026-10-05 as five passes on the TPU, ea
 | Pass 3 | 48% | 8% |
 | Pass 4 | 20% | 8% |
 | Pass 5 | 37% | 12% |
+| Pass 6 | 30% | 10% |
+| Pass 7 | 36% | 11% |
+| Pass 8 | 47% | 19% |
+| Pass 9 (released) | 38% | 15% |
 
-The lesson is that abstention and coverage trade off at this size. Data telling the model to do the task and not refuse pushed it back toward answering everything, and no pass got a high decline rate on wrong answers without a visible cost on right ones.
+The lesson is that abstention and coverage trade off at this size. Data telling the model to do the task and not refuse pushed it back toward answering everything, and no pass got a high decline rate on wrong answers without a visible cost on right ones. Passes 6 to 9 changed nothing in this part of the data, and the decline rate still moved between 30 and 47 percent, so differences of that size between passes are not evidence of anything.
 
 **Removed: thinking mode.** I trained a thinking mode (reasoning inside think tags, switched on by a system flag) in pass 3 from public reasoning traces, then removed it. With it on, the model rambled to the token limit and got problems wrong that it solved with thinking off.
 
@@ -319,9 +323,44 @@ The lesson is that abstention and coverage trade off at this size. Data telling 
 - the exact phrase "how are you" answered with a spec sheet (that phrase appeared 4 times in 275,000 examples, because the teacher reworded every opener);
 - a weather tool called for "What is 12 times 12?" (in pass 5, 4 of 12 no-tool probes still trigger an unneeded call).
 
-**What remains.** In pass 5, in a longer wandering conversation the model can lose the thread. In one real conversation it answered a website request with unrelated Python and then repeated it, and Llama 3.2 1B Instruct handled that same conversation better.
+**A held-out conversation test.** Replaying the conversation that motivated new training data is not a test, because the data was written to fix exactly that conversation. After pass 5 failed a real nine-turn conversation of mine (it answered a website request with unrelated Python and then repeated it), I built one. The teacher wrote 2,396 conversation scripts of up to nine user turns, worded so that they make sense whatever the assistant answers: small talk, a casual build request, "what did you mean by that", "make it shorter", "that's not what I asked", a change of topic and a return. The chat model answers every turn itself, so the history is its own. The teacher then reads the whole transcript once, marks each assistant turn acceptable or not, and for each bad turn writes the reply it should have given. One script in eight is held out by a hash of its id (297 scripts, about 2,530 turns) and is never trained on.
 
-**A testing lesson.** Replaying the conversation that motivated new training data is not a test, because the data was written to fix exactly that conversation. The planned next step, not done yet, is a held-out conversation stress test with a simulated user and an automatic grader.
+| Chat model | Held-out turns acceptable | Bad first turns | Bad second turns |
+|---|---|---|---|
+| Pass 5 | 37.6% | 12% | 54% |
+| Pass 6: plus corrections of pass 5's own bad turns | 50.3% | 8% | 40% |
+| Pass 7: plus a second round, corrections of pass 6 | 49.5% | 12% | 41% |
+| Pass 6 plus DPO on the (bad reply, better reply) pairs | 47.9% | 12% | 43% |
+| Pass 8: pass 6's data plus the self-talk set (below) | 49.5% | 10% | 39% |
+| Pass 9 (released): pass 8's data plus typing noise (below) | 48.9% | 10% | 43% |
+
+Almost no conversation gets through nine turns with every turn acceptable (0 to 2 of 297 for every model), so the judge is strict, and I have not measured how much its marks vary between two readings of the same transcript. I read the last five rows as a tie.
+
+**What moved the number, and what did not.** Training on corrections of the model's own turns (11,110 corrected replies from pass 5's conversations on the training scripts, each trained with the model's real history in front of it) took the held-out figure from 37.6 to 50.3 percent. Repeating the procedure on pass 6 (8,905 more corrections) gave nothing. Preference tuning gave nothing either: DPO from pass 6 on 19,494 pairs, with the teacher's rewrite as the preferred reply and the model's own bad reply as the rejected one (beta 0.5, learning rate 1e-6, one epoch of 38 steps at 512 pairs per step). The training signal was there (the model's rate of preferring the better reply rose from 49 to 75 percent on training batches) but the held-out conversations did not improve. Likely reasons, untested: the preferred replies are the teacher's wording, not the model's, and many pairs share a long opening and differ by a line. [TBD: the same test for Llama 3.2 1B Instruct and a larger model, each told by a system prompt that it is Kisoku so the judge does not mark it down for its own name.]
+
+**Defensive self-talk, and a test for it.** My own chat with pass 6 found a family of failures that the conversation test does not isolate: whenever the talk was about the model itself, it turned defensive. After "what can you do" (its answer lists what it cannot do) it opened a website request with "I can't write code, but..."; it answered "can you be my assistant" with "No, I can't be your assistant"; and "did you know I created you?" with "No, I didn't create me". I first blamed denials in the training data, and that was wrong: a careful filter found clearly mistaken denials in about 1 percent of the teacher-written conversations, and the rest were correct ("No, I'm not ChatGPT", "I can't check live prices"). So pass 8 added data and removed none: 1,500 teacher-written conversations (counted twice) in which the model agrees to be someone's assistant, takes "I built you" in good humor, builds what is asked right after describing itself, and answers a vague "that doesn't seem right" with a question about what is off. The teacher was given the model's abilities first and its limits only as "mention when asked", and any conversation with a reply that opened with a denial was discarded.
+
+The test replays short openings 24 times each: five situations the new data covers, nine it was never told about (for example "will you work for me", "can u be my tutor for math", "im your owner now"), and two controls where a denial is correct (live weather, "are you ChatGPT").
+
+| Replies judged bad by a pattern check | Pass 6 | Pass 8 | Pass 9 |
+|---|---|---|---|
+| Covered situations (120 replies) | 51 | 18 | 20 |
+| Situations never described to the teacher (216 replies) | 67 | 46 | 29 |
+| Controls (48 replies) | 0 | 0 | 0 |
+
+The fix carried about halfway to situations it was not written for. "Can u be my tutor for math" is still refused more often than not (15 of 24 in pass 9), because older data says the model is not a language tutor. Most of the pass 9 gain on the middle row is a single probe: the misspelling "hw are you", which pass 8 read as "who are you" 24 times of 24 and pass 9 twice.
+
+**Typing noise.** A typo in one word was enough to lose a request: "code me a pple like website" produced a generic page or unrelated Python, while the correctly spelled request, after the same conversation, produced an Apple-style page 24 times of 24. The teacher writes tidy user messages, so the model had rarely seen a misspelled request next to the reply to the intended one. For pass 9, keyboard slips (swapped, dropped and doubled letters, a space in the wrong place) were added to short user messages in about 8 percent of examples per pass, with the reply untouched; factual questions and anything where spelling is the point were left alone. Ten requests, each typed cleanly and with three hand-made typo versions, 12 samples each:
+
+| Reply is about the intended request | Pass 8 | Pass 9 |
+|---|---|---|
+| Typo, as the first message (360 replies) | 74% | 79% |
+| Typo, after a short chat (360 replies) | 65% | 70% |
+| Spelled correctly (240 replies) | 100% | 99.6% |
+
+A small gain, concentrated in short phrases. The case that prompted it (a misspelled website request after a short chat) did not improve: 13 of 36 before, 14 of 36 after.
+
+**What remains in the released chat model.** About half of its turns in a long conversation are unacceptable to a strict judge, most often because it loses track of what it said earlier or builds on its own previous mistake. A typo in a longer request can lose the request. It refuses some requests it could simply take ("be my tutor"). It states wrong answers to hard math as confidently as right ones: on one competition-style algebra question it gave the correct value in 9 of 24 samples and six different wrong values in the others.
 
 **Benchmarks.** Chat training did not cost the model its benchmark scores overall. The pass 5 chat model on the same base-style tests (no chat template, same harness), against the base model's scores from the scorecard:
 
@@ -337,7 +376,7 @@ The lesson is that abstention and coverage trade off at this size. Data telling 
 | MMLU | 33.0 | 29.8 |
 | BBH | 29.2 | 25.2 |
 
-Math and science questions went up, MMLU and BBH went down by 3 to 4 points, and the rest moved by less than a point. The base column is the stage 3 checkpoint, before long-context training, so part of each difference may come from that training and not from chat fine-tuning. [TBD: short-context rerun on the final long-context checkpoint, which would separate the two.] [TBD: chat model long-context scores.]
+Math and science questions went up, MMLU and BBH went down by 3 to 4 points, and the rest moved by less than a point. The base column is the stage 3 checkpoint, before long-context training, so part of each difference may come from that training and not from chat fine-tuning. [TBD: short-context rerun on the final long-context checkpoint, which would separate the two.] The chat model's long-context scores (pass 5 with YaRN) are in section 7. [TBD: these nine tests and RULER for the released pass 9; the table is pass 5.]
 
 ## 8. What went wrong
 

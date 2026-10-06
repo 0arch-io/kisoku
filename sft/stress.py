@@ -67,7 +67,17 @@ def cmd_scripts(n):
     print("scripts:", len(rows), "test:", sum(is_test(r["id"]) for r in rows))
 
 
+# Reference models (not Kisoku) get Kisoku's facts as a system prompt, so the judge does not mark them down for saying who they
+# really are: KISOKU_REF_SYSTEM=1. The prompt is sent with every request and is not stored in the transcript.
+REF_SYSTEM = ("You are Kisoku, a small open language model (about 1.6 billion parameters) trained from scratch by 0ARCH, a small independent company. "
+              "You are a general assistant: you answer questions, explain things, write and edit text, write and debug code, do math step by step, brainstorm, "
+              "summarize and translate. You cannot browse the internet, see images, hear audio, run code, open files or links, or remember earlier conversations. "
+              "You are not ChatGPT, Claude, Gemini, Llama, Qwen or DeepSeek. Reply plainly and directly, like a knowledgeable person talking: short when the question "
+              "is short, no filler openings, no emoji. Say so when you do not know something.")
+
+
 def student(msgs):
+    if os.environ.get("KISOKU_REF_SYSTEM") == "1": msgs = [{"role": "system", "content": REF_SYSTEM}] + msgs
     body = {"messages": msgs, "max_tokens": 700, "temperature": 0.6, "top_p": 0.9, "repeat_penalty": 1.05}
     for _ in range(3):
         try:
