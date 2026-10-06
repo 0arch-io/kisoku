@@ -1,0 +1,99 @@
+# Kisoku v2 1B chat preference tuning (DPO, Tunix DPOTrainer) on top of chat-sft-006. Model block is copied from ~/kisoku-v2-1b.yml and must stay identical.
+base_config: base.yml
+run_name: "kisoku-v2-1b-sft-001"
+base_output_directory: "gs://kisoku-v2-training/runs/"
+
+# ---- model (identical to pretrain) ----
+base_emb_dim: 2048
+base_num_query_heads: 16
+base_num_kv_heads: 4
+base_mlp_dim: 8192
+base_num_decoder_layers: 22
+head_dim: 128
+mlp_activations: ["silu", "linear"]
+vocab_size: 128256
+decoder_block: "qwen3"
+normalization_layer_epsilon: 1.0e-6
+rope_max_timescale: 5_000_000
+rope_type: "default"
+use_qk_norm: True
+logits_via_embedding: True
+normalize_embedding_logits: False
+enable_dropout: False
+attention_bias: False
+mlp_bias: False
+mtp_num_layers: 0
+# Tunix's adapter looks the model up by name (only for RL weight sync): kisoku-dpo-run.sh passes model_name=qwen3-1.7b
+# override_model_config=True AND the 5 sizes that differ from that preset on the command line, as convert-chat.sh does:
+# override_model_config only protects command-line keys, so the copies in this file lose to the preset (28 layers).
+tokenizer_type: "huggingface"
+tokenizer_path: "unsloth/Llama-3.2-1B"
+max_target_length: 3072  # 2048 prompt (left-trimmed) + 1024 reply
+
+# ---- start from chat-sft-006 (the best SFT pass); the reference model is a frozen copy of it ----
+load_parameters_path: "gs://kisoku-v2-training/runs/kisoku-v2-1b-chat-sft-006/checkpoints/2642/items"
+
+# ---- DPO data (sft/build_dpo.py): prompt already carries <|begin_of_text|> and the chat headers ----
+use_dpo: True
+dpo:
+  algo: "dpo"
+  orpo_lambda: 0.1
+  dpo_label_smoothing: 0.0
+  dpo_beta: 0.5            # SmolLM2-1.7B's DPO setting
+  max_prompt_length: 2048
+packing: False
+add_bos: False
+add_eos: False
+dataset_type: hf
+hf_path: "parquet"
+hf_train_files: "/home/josephrodriguez/sft-data/kisoku-dpo-v1/train-*.parquet"
+train_split: "train"
+hf_eval_files: "/home/josephrodriguez/sft-data/kisoku-dpo-v1/eval-*.parquet"
+hf_eval_split: "train"
+train_data_columns: ["prompt", "chosen", "rejected"]
+eval_data_columns: ["prompt", "chosen", "rejected"]
+enable_data_shuffling: False  # build_dpo.py shuffles
+num_epoch: 2
+
+# ---- optimizer: same Muon/AdamW split as pretrain, SFT learning rate ----
+opt_type: "muon"
+muon_beta: 0.95
+muon_weight_decay: 0.1
+muon_consistent_rms: 0.2
+adam_b1: 0.9
+adam_b2: 0.95
+adam_eps: 1.0e-8
+adam_weight_decay: 0.1
+adamw_mask: [".*norm.*", ".*bias.*", ".*embed.*"]
+gradient_clipping_threshold: 1.0
+z_loss_multiplier: 0.0
+learning_rate: 1.0e-6     # SmolLM2 DPO LR
+lr_schedule_type: "cosine"
+learning_rate_final_fraction: 0.0
+warmup_steps_fraction: 0.1
+skip_step_on_spikes: False
+
+# ---- batch / sharding (v4-32: 16 chips) ----
+per_device_batch_size: 1      # DPO = 4 forward passes per pair; batch 2 needed 66 GB HBM/chip (have 31)
+gradient_accumulation_steps: 8   # 16 x 8 = 128 pairs per step (SmolLM2)
+ici_fsdp_parallelism: 16
+
+# ---- precision / memory (same as pretrain) ----
+dtype: "bfloat16"
+weight_dtype: "float32"
+grad_dtype: "float32"
+cast_logits_to_fp32: True
+remat_policy: "full"
+scan_layers: True
+
+# ---- checkpoints / eval / logging ----
+enable_checkpointing: True
+async_checkpointing: False
+save_checkpoint_on_completion: True
+checkpoint_period: 50
+eval_interval: 50
+eval_steps: 20
+eval_per_device_batch_size: 2
+log_period: 10
+gcs_metrics: False
+enable_tensorboard: False

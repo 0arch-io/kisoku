@@ -1,0 +1,14 @@
+{
+ "tags": [
+  "sft005",
+  "sft006"
+ ],
+ "train_pairs": 19494,
+ "eval_pairs": 519,
+ "skipped": 2,
+ "mean_chars": {
+  "prompt": 3462,
+  "chosen": 870,
+  "rejected": 822
+ }
+}
