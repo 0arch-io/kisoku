@@ -172,7 +172,7 @@ def stream_deepseek(name):
 
 # ---- Kisoku-specific conversations written by the teacher (gen_kisoku.py -> data/gen2/<category>.jsonl) ----
 GEN2_DIR = os.environ.get("GEN2_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "gen2"))
-GEN2 = ["persona", "build", "revise", "chat", "explain", "tools", "shortqa", "think_math", "think_logic", "mixed", "smalltalk", "greet"]
+GEN2 = ["persona", "build", "revise", "chat", "explain", "tools", "shortqa", "think_math", "think_logic", "mixed", "smalltalk", "greet", "long", "self"]
 THINK_SYSTEMS = ["/think", "You are Kisoku, a helpful AI assistant created by 0ARCH. /think", "Think step by step before answering. /think"]
 # Fewer public examples than the first two passes, so the Kisoku-specific data is a third of the mix instead of a tenth.
 MERGE_CAPS = {"smoltalk_smollm3_smol_magpie_ultra_no_think": 30000, "hermes3": 25000, "OpenHermes_2.5_no_think": 15000,
@@ -227,8 +227,8 @@ def stream_gen2(cat):
             # worked answers. Thinking-mode data comes from SmolTalk2's think splits instead (stream_think).
             yield {"messages": r["messages"], "source": src.replace("think_", "verified_")}
         else:
-            # the greeting set came out small (the teacher account ran out of credit at 404 conversations), so it is repeated
-            for _ in range(3 if cat == "greet" else 1):
+            # the self-talk set (confident, no denial openers) is small against years of "I can't" in the mix, so it counts twice
+            for _ in range(2 if cat == "self" else 1):
                 yield {"messages": [dict(m) for m in r["messages"]], "source": src}
 
 
@@ -272,13 +272,15 @@ def stream_think(split):
         yield {"messages": [{"role": "system", "content": sysmsg}] + out, "source": split}
 
 
-ADDITIONS = ["kisoku_idk", "kisoku_known", "kisoku_unknown_term", "kisoku_correction", "kisoku_hold", "tools_not_needed"]
+ADDITIONS = ["kisoku_idk", "kisoku_known", "kisoku_unknown_term", "kisoku_correction", "kisoku_hold", "tools_not_needed", "kisoku_onpolicy"]
+# On-policy fixes exported by `stress.py export <tag>` (the model's own conversations, bad turns rewritten by the judge)
+ONPOLICY = os.environ.get("ONPOLICY", "")
 
 
 def stream_additions(name):
     """Second-pass additions written by build_additions.py (already in final form, no filtering). Skipped when absent."""
-    path = f"{ROOT}/additions/{name}.jsonl"
-    if os.path.exists(path):
+    path = ONPOLICY if name == "kisoku_onpolicy" else f"{ROOT}/additions/{name}.jsonl"
+    if path and os.path.exists(path):
         for line in open(path):
             stats[name]["seen"] += 1
             yield json.loads(line)
@@ -298,8 +300,8 @@ def plan():
     for c in GEN2:
         if os.path.exists(f"{GEN2_DIR}/{c}.jsonl"):
             p[f"kisoku2_{c}"] = ((lambda c=c: stream_gen2(c)), None)
-    if os.path.isdir(f"{ROOT}/additions"):
-        for s in ADDITIONS:
+    for s in ADDITIONS:
+        if (s == "kisoku_onpolicy" and ONPOLICY) or os.path.isdir(f"{ROOT}/additions"):
             p[s] = ((lambda s=s: stream_additions(s)), None)
     return p
 
@@ -443,9 +445,16 @@ def merge():
         return [rows[i::n] for i in range(n)]
 
     idx = 0
+    typo_share = float(os.environ.get("TYPOS", "0"))
     for p in range(2):
         order = train[:]
         random.Random(SEED + 100 + p).shuffle(order)
+        if typo_share:  # different messages get the slips in each pass; the eval split stays clean
+            import typos
+            trng = random.Random(SEED + 200 + p)
+            pairs = [typos.add_typos(ex, trng, typo_share) for ex in order]
+            order = [ex for ex, _ in pairs]; stats["_typos"][f"pass{p}"] = sum(c for _, c in pairs)
+            log(f"typos pass {p}: {stats['_typos'][f'pass{p}']} of {len(order)} examples")
         for part in shards(order, N_TRAIN_SHARDS_PER_PASS):
             write(part, f"{OUT}/train-{idx:05d}-of-{2*N_TRAIN_SHARDS_PER_PASS:05d}.parquet")
             idx += 1

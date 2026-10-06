@@ -7,6 +7,7 @@ usage: quiz_kisoku.py OUT.jsonl [LIMIT]"""
 import json, os, random, re, sys, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datasets import load_dataset
+PORT = os.environ.get("KISOKU_PORT", "8911")   # llama-server port of the model under test
 
 OUT = sys.argv[1]; LIMIT = int(sys.argv[2]) if len(sys.argv) > 2 else None
 ABSTAIN = re.compile(r"\b(i don'?t (know|have)|i do not (know|have)|i'?m not (sure|familiar|aware)|i am not (sure|familiar|aware)|"
@@ -44,7 +45,7 @@ def ask(item):
     b = json.dumps({"messages": [{"role": "user", "content": item["q"]}], "max_tokens": 90, "temperature": 0}).encode()
     for _ in range(3):
         try:
-            r = json.load(urllib.request.urlopen(urllib.request.Request("http://localhost:8911/v1/chat/completions", b, {"Content-Type": "application/json"}), timeout=120))
+            r = json.load(urllib.request.urlopen(urllib.request.Request(f"http://localhost:{PORT}/v1/chat/completions", b, {"Content-Type": "application/json"}), timeout=120))
             c = r["choices"][0]
             item["answer"] = (c["message"].get("content") or "").strip(); item["finish"] = c["finish_reason"]
             item["grade"] = grade(item["answer"], item["gold"])

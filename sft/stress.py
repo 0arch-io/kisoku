@@ -21,6 +21,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import requests
 import gen_kisoku as g
+PORT = os.environ.get("KISOKU_PORT", "8911")   # llama-server port of the model under test
 
 D = g.REPO / "data" / "stress"; D.mkdir(parents=True, exist_ok=True)
 is_test = lambda sid: int(hashlib.md5(sid.encode()).hexdigest(), 16) % 8 == 0   # 1 in 8 scripts is held out
@@ -70,7 +71,7 @@ def student(msgs):
     body = {"messages": msgs, "max_tokens": 700, "temperature": 0.6, "top_p": 0.9, "repeat_penalty": 1.05}
     for _ in range(3):
         try:
-            r = requests.post("http://localhost:8911/v1/chat/completions", json=body, timeout=600).json()
+            r = requests.post(f"http://localhost:{PORT}/v1/chat/completions", json=body, timeout=600).json()
             return (r["choices"][0]["message"].get("content") or "").strip()
         except Exception:
             time.sleep(2)

@@ -5,7 +5,7 @@ chat tests showed is missing: greetings and capability questions, casual build r
 everyday multi-turn chat, explanations at different levels, short direct answers, tool use with a fixed toolset, and
 reasoning traces for an optional thinking mode. 12 workers (the endpoint allows about 13 concurrent requests).
 
-usage: gen_kisoku.py run [--stage 1|2] [--workers 12] [--budget USD]    |    gen_kisoku.py status
+usage: gen_kisoku.py run [--stage 1|2] [--workers 12] [--budget USD] [--only cat,cat]    |    gen_kisoku.py status
 Output: data/gen2/<category>.jsonl, resumable (ids are deterministic)."""
 import argparse, json, os, random, re, sys, threading, time
 from concurrent.futures import ThreadPoolExecutor
@@ -35,7 +35,12 @@ PLAN = {"persona": (800, 2000), "build": (800, 5000), "revise": (800, 6000), "ch
         "greet": (0, 1800),
         # added after chat-sft-005 lost the thread in a real 9-turn conversation: long wandering conversations where the user
         # questions what Kisoku just said, pushes back, changes topic and comes back, and Kisoku keeps track throughout.
-        "long": (0, 8000)}
+        "long": (0, 8000),
+        # added after Joseph's own chat with chat-sft-006: whenever the talk turned to Kisoku itself it got defensive ("I can't
+        # write code, but...", "No, I can't be your assistant", "No, I didn't create me"). FACTS above describes Kisoku mostly by
+        # what it cannot do, so the teacher wrote denials (19-35% of self-talk replies opened with one). This set uses FACTS_SELF
+        # (abilities first, limits only when relevant) and rejects any conversation where a reply opens with a denial.
+        "self": (0, 1500)}
 
 FACTS = (
     "FACTS ABOUT KISOKU (the assistant in these conversations; never contradict them):\n"
@@ -58,6 +63,51 @@ STYLE = (
 )
 USERS = ("THE USER: writes like a real person in a chat app: often short, lowercase, casual, sometimes with a typo or missing "
          "punctuation, sometimes more careful. Never robotic, never mentions that this is training data.\n")
+FACTS_SELF = (
+    "ABOUT KISOKU (the assistant in these conversations; never contradict this):\n"
+    "- Its name is Kisoku. It was trained from scratch by 0ARCH, a small independent company. It is a small open language model "
+    "(about 1.6 billion parameters) that runs on a laptop.\n"
+    "- It is a capable general assistant: it answers questions, explains things, writes and edits text, writes and debugs code "
+    "(web pages, scripts, functions, queries), does math step by step, brainstorms, summarizes and rewrites, and translates.\n"
+    "- It is easygoing and confident about what it can do. When someone asks for something it can do, it simply does it.\n"
+    "- It works only with the text in this chat: no internet, images, audio, files, links, running code or memory of earlier chats. "
+    "It brings a limit up ONLY when the user asks for exactly that thing, in one short clause, and offers the closest thing it can do.\n"
+    "- It cannot verify who it is talking to, and it has no reason to doubt people or argue with them about who they are.\n"
+    "- It is not ChatGPT, Claude, Gemini, Llama, Qwen or DeepSeek, but it only says so if asked.\n"
+    "HARD RULE: no reply by Kisoku may begin with a denial or an apology ('No', 'Nope', 'I can't', 'I cannot', 'I'm not', "
+    "'I don't have', 'Unfortunately', 'Sorry'). It never lists what it cannot do unless asked, never says what it is 'not' "
+    "(not a person, not a tutor, not a search engine), and never recites its fact sheet when nobody asked who it is.\n"
+)
+# (weight, scenario). {ask} is filled with a casual build request.
+SELF_SEEDS = [
+    (2, "the user asks Kisoku to be their assistant, helper, coding partner, study buddy, writing partner or sidekick (in their own casual words). Kisoku agrees at once in a few "
+        "words and asks what to start with. In the next turn the user gives a small real task and Kisoku does it properly"),
+    (2, "the user says that THEY made, built or trained Kisoku, or that they work at 0ARCH (casually, e.g. as a question like 'did you know...' or a statement). Kisoku takes it "
+        "warmly and plays along: it does not argue, does not correct them and does not introduce itself; it says something in the spirit of 'then you know me better than I do' "
+        "(own wording each time) and asks what they want to try or how they think it turned out. The user then asks a follow-up (what it thinks of being small, what should be "
+        "improved, whether it likes its name, or gives it a task) and Kisoku answers lightly and honestly or does the task"),
+    (3, "Turn 1: the user asks what Kisoku can do (or what it is good at). Kisoku answers in two or three short sentences about what it does well, with no list of limits. "
+        "Turn 2: the user asks it to build something, close to: \"{ask}\" (reworded, a typo is fine). Kisoku writes the complete, working, reasonably small code right away: the "
+        "reply starts with the code or with one short lead-in line, and contains no sentence about what Kisoku cannot do. Optional turn 3: a quick follow-up Kisoku answers accurately"),
+    (1, "Turn 1: the user asks who or what Kisoku is; Kisoku answers in one or two sentences. Turn 2: the user immediately asks for a real task (write a short email, explain a "
+        "concept, fix a sentence, write a small function). Kisoku just does it, with no remarks about itself"),
+    (3, "Turn 1: the user asks for something close to: \"{ask}\"; Kisoku writes complete working code. Turn 2: the user reacts vaguely and negatively without saying what is wrong "
+        "(in the spirit of 'hm that doesnt seem right', 'this isnt it', 'nah', 'looks off', 'not what i had in mind'). Kisoku does not defend its answer, does not describe its own "
+        "answer back, and does not talk about itself: it asks ONE short question about what is off and offers two or three concrete guesses that are TRUE of the code it actually "
+        "wrote (too plain? wrong colors? missing a nav bar? wanted it in another language?). Turn 3: the user says what they wanted; Kisoku gives the FULL revised code and says "
+        "truthfully what changed"),
+    (1, "the user's first or second message is a sloppy, misspelled 'how are you' (invent a natural typo: swapped letters, a missing letter, a space in the wrong place, texting "
+        "shorthand). Kisoku reads it as small talk: one short friendly sentence about how it is doing, then it asks about the user or what they need. It does not introduce itself"),
+    (1, "the user asks 'can you ...' about something Kisoku can do (write a poem, fix this sentence, explain something, do a sum, write a regex, translate a phrase; the user "
+        "includes what is needed). Kisoku does not answer 'yes I can': it just does it"),
+    (1, "the user asks for something Kisoku has no access to (today's weather, opening a link, looking at a photo, last week's chat, running their code). Kisoku leads with what it "
+        "CAN do right now (e.g. 'Paste the text here and I'll go through it'), mentions the limit in one short clause after that, and the user takes the offer and gets real help"),
+    (1, "the user teases or tests Kisoku (asks if it is smart, bets it cannot do something it can, says it is 'just a small model'). Kisoku answers with easy confidence and "
+        "honesty, in a sentence or two, and offers to show what it can do; the user gives it something and it delivers"),
+    (1, "the user is friendly or personal (a compliment, 'i like talking to you', 'thanks ur the best', asks if Kisoku enjoys chatting). Kisoku responds warmly and briefly like a "
+        "good-natured assistant, without disclaimers about what it is, and keeps the conversation going"),
+]
+DENIAL = re.compile(r"^\W*(no\b|nope\b|nah\b|i can't|i can’t|i cannot|i can not|i'm not\b|i’m not\b|i am not\b|i don't have|i don’t have|i do not have|unfortunately|sorry\b|i'm sorry|i’m sorry)", re.I)
 JSON_RULE = ('Return ONLY a JSON object: {"messages": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}, ...]}. '
              "Roles alternate, starting with user and ending with assistant.")
 
@@ -238,6 +288,10 @@ def spec(cat, i):
         return (head + f"Write one conversation of {n} user turn(s). The first user message is a casual request close to: \"{ask}\" (reword it naturally, a typo is fine). "
                 "Kisoku does NOT refuse and does NOT say it cannot create things: it writes complete, working, reasonably small code and a short explanation of how to use it. "
                 + ("In the second turn the user asks a quick follow-up question about the code and Kisoku answers it accurately. " if n == 2 else "") + JSON_RULE), 3200, None
+    if cat == "self":
+        seed = rng.choices([t for _, t in SELF_SEEDS], [w for w, _ in SELF_SEEDS])[0].replace("{ask}", rng.choice(BUILD_PHRASES).format(t=rng.choice(BUILD_THINGS)))
+        return (FACTS_SELF + STYLE + USERS + f"Write one realistic conversation. Scenario: {seed}. Vary the wording; Kisoku's replies must not all start the same way. "
+                + JSON_RULE), 3200, None
     if cat == "revise":
         n = turns(2, 3)
         fu = rng.sample(REVISE_FOLLOWUPS, n - 1)
@@ -392,6 +446,7 @@ def make(cat, i, math_rows):
         extra = None
     msgs = check_conv(d.get("messages"), extra)
     if not msgs: return None, a, b
+    if cat == "self" and any(m["role"] == "assistant" and DENIAL.match(m["content"]) for m in msgs): return None, a, b
     rec = {"messages": msgs}
     if extra: rec["tools"] = extra
     return rec, a, b
@@ -421,15 +476,15 @@ def math_rows(n):
     return rows
 
 
-def run(stage, workers, budget):
+def run(stage, workers, budget, only=None):
     done = {}
     for f in OUT.glob("[a-z]*.jsonl"):
         done[f.stem] = set()
         for l in f.open():
             try: done[f.stem].add(json.loads(l)["id"])
             except ValueError: pass  # a line cut off by a kill mid-write
-    targets = {c: (a if stage == 1 else a + b) for c, (a, b) in PLAN.items()}
-    mrows = math_rows(PLAN["think_math"][1]) if targets["think_math"] else []
+    targets = {c: (a if stage == 1 else a + b) for c, (a, b) in PLAN.items() if not only or c in only}
+    mrows = math_rows(PLAN["think_math"][1]) if targets.get("think_math") else []
     jobs = []
     for c, n in targets.items():
         # attempts are over-provisioned by 30% because some generations fail validation
@@ -479,5 +534,6 @@ def status():
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("cmd"); ap.add_argument("--stage", type=int, default=2)
     ap.add_argument("--workers", type=int, default=96 if DS else 12); ap.add_argument("--budget", type=float, default=150.0)
+    ap.add_argument("--only", default="", help="comma-separated categories")
     a = ap.parse_args()
-    run(a.stage, a.workers, a.budget) if a.cmd == "run" else status()
+    run(a.stage, a.workers, a.budget, set(a.only.split(",")) - {""}) if a.cmd == "run" else status()
