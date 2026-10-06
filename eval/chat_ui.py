@@ -12,11 +12,17 @@ main{max-width:760px;margin:0 auto;padding:24px 16px 140px}h1{font-size:15px;fon
 .t{font-size:12px;color:#77746d;margin-top:6px}form{position:fixed;left:0;right:0;bottom:0;background:#0d0d0e;border-top:1px solid #26262a;padding:12px 16px}
 .row{max-width:760px;margin:0 auto;display:flex;gap:8px}textarea{flex:1;resize:none;height:54px;background:#1b1b1d;color:inherit;border:1px solid #2e2e33;border-radius:10px;padding:10px;font:inherit}
 button{background:#e8e6e1;color:#0d0d0e;border:0;border-radius:10px;padding:0 16px;font:inherit;font-weight:600;cursor:pointer}button.s{background:#1b1b1d;color:#9a978f;border:1px solid #2e2e33}
-</style><main><h1>KISOKU 1.6B, LOCAL</h1><div id=log></div></main>
+</style>
+<link rel=stylesheet href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<main><h1>KISOKU 1.6B, LOCAL</h1><div id=log></div></main>
 <form id=f><div class=row><textarea id=q placeholder="Ask Kisoku something. Enter sends, Shift+Enter makes a new line." autofocus></textarea><button>Send</button><button type=button class=s id=n>New chat</button></div></form>
 <script>
 let msgs=[];const log=document.getElementById('log'),q=document.getElementById('q');
-function add(c,t,meta){const d=document.createElement('div');d.className='m '+c;d.textContent=t;if(meta){const s=document.createElement('div');s.className='t';s.textContent=meta;d.appendChild(s)}log.appendChild(d);scrollTo(0,document.body.scrollHeight);return d}
+function add(c,t,meta){const d=document.createElement('div');d.className='m '+c;d.textContent=t;if(meta){const s=document.createElement('div');s.className='t';s.textContent=meta;d.appendChild(s)}log.appendChild(d);math(d);scrollTo(0,document.body.scrollHeight);return d}
+// math written as \\( ... \\), \\[ ... \\] or $$ ... $$ is typeset with KaTeX (skipped quietly when the CDN is unreachable)
+function math(d){if(window.renderMathInElement)renderMathInElement(d,{delimiters:[{left:'\\\\(',right:'\\\\)',display:false},{left:'\\\\[',right:'\\\\]',display:true},{left:'$$',right:'$$',display:true}],throwOnError:false})}
 async function send(){const t=q.value.trim();if(!t)return;q.value='';msgs.push({role:'user',content:t});add('u',t);const w=add('a','...');
  try{const t0=performance.now();const r=await fetch('/chat',{method:'POST',body:JSON.stringify({messages:msgs})});const j=await r.json();
   if(j.error)throw new Error(j.error);msgs.push({role:'assistant',content:j.content});w.remove();add('a',j.content,j.tokens+' tokens, '+((performance.now()-t0)/1000).toFixed(1)+' s')}

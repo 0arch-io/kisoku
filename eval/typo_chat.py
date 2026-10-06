@@ -2,7 +2,7 @@
 after a short greeting chat (Joseph's failures got worse with more chat before the typo). A reply counts when it is about
 the intended request (simple keyword check per request). Against llama-server on KISOKU_PORT (default 8911).
 usage: typo_chat.py TAG [N]   -> prints a table and writes data/stress/typo-chat-TAG.json"""
-import json, os, re, sys, urllib.request
+import json, os, re, sys, time, urllib.error, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -27,7 +27,12 @@ PROBES = [
 
 def ask(msgs):
     b = json.dumps({"messages": msgs, "max_tokens": 500, "temperature": 0.6, "top_p": 0.9, "repeat_penalty": 1.05}).encode()
-    r = json.load(urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{PORT}/v1/chat/completions", b, {"Content-Type": "application/json"}), timeout=300))
+    for attempt in range(40):   # the server sits behind an ssh tunnel that can drop for a minute; wait for it to come back
+        try:
+            r = json.load(urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{PORT}/v1/chat/completions", b, {"Content-Type": "application/json"}), timeout=300))
+            break
+        except (urllib.error.URLError, ConnectionError, TimeoutError):
+            time.sleep(15)
     return (r["choices"][0]["message"].get("content") or "").strip()
 
 

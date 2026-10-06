@@ -221,7 +221,32 @@ I have to state the miss plainly. The earlier draft hoped that the case for the 
 
 The gain from the work is large against my own starting point: between the Phase A checkpoint and the final one, the plain 32K score went from 41.0 to 60.1, and the 4K score from 71.9 to 76.2.
 
-**YaRN at inference.** With YaRN factor 2, the final checkpoint's 64K score rose from 44.7 (plain config) to 56.7. It cost nothing measurable at 4K (76.1 against 76.2) and 0.5 and 0.4 points at 8K and 16K. At 32K it costs 1.3 points (58.8 against 60.1). I did not expect YaRN to help a model that was trained natively at 64K, and I have not tested why it does. The plain config was not run at 128K. [TBD: which config ships as the default.]
+**YaRN at inference.** With YaRN factor 2, the final checkpoint's 64K score rose from 44.7 (plain config) to 56.7. It cost nothing measurable at 4K (76.1 against 76.2) and 0.5 and 0.4 points at 8K and 16K. At 32K it costs 1.3 points (58.8 against 60.1). I did not expect YaRN to help a model that was trained natively at 64K, so I reran it as a controlled test (next paragraph). The plain config was not run at 128K. [TBD: which config ships as the default.]
+
+**YaRN replication (2026-10-05, one machine).** The 44.7 and the 56.7 above came from different cards, so the first step was a same-machine control: all rows below ran on the RTX PRO 6000 with the settings of the main table (13 RULER tasks, 50 samples per task, 64K). "Frequencies only" keeps YaRN's rescaled low frequencies and sets its attention factor to 1.0; "attention factor only" keeps the factor a scale of 2 would use (0.1 ln 2 + 1 = 1.0693) with the frequencies left as trained.
+
+| Kisoku 1.6B final, RULER at 64K | Score | Against plain |
+|---|---|---|
+| Plain | 45.7 | |
+| YaRN x1.5 | 53.4 | +7.7 |
+| YaRN x2 | 56.7 | +11.0 |
+| YaRN x2, frequencies only | 46.8 | +1.1 |
+| YaRN x2, attention factor only | 42.6 | -3.1 |
+
+The gain is real on one machine (45.7 to 56.7) and it grows with the scale factor over the two factors that finished. Neither half of YaRN produces it alone: the rescaled frequencies add 1.1 points, the attention factor by itself costs 3.1, and together they add 11.0. [TBD: factor 4; the run was stopped at 29%.]
+
+It is not a general "YaRN helps inside the trained range" effect. I gave the same treatment (factor 2 over the native 32K) to two other plain-RoPE models:
+
+| RULER | 16K | 32K | 64K |
+|---|---|---|---|
+| Qwen3 0.6B base, plain | 68.7 | 60.2 | 37.6 |
+| Qwen3 0.6B base, YaRN x2 | 56.5 | 52.9 | 52.3 |
+| Qwen3 1.7B base, plain | 78.3 | 72.4 | 42.1 |
+| Qwen3 1.7B base, YaRN x2 | 70.9 | 65.6 | [TBD: stopped at 62%] |
+
+(The plain 32K cells are same-machine reruns; the plain 16K and 64K cells are from the main table's RTX 4090 runs.) For both Qwen3 models YaRN costs 7 to 12 points inside the trained range, and for the 0.6B it buys about 15 points beyond it at 64K, which is the usual YaRN trade. Kisoku shows the same shape one octave up: no gain through 32K (58.8 against 60.1) and a large gain at 64K. The difference is that 64K is inside Kisoku's training range on paper. My reading, which I have not tested, is that the 64K phases were short (about 4,160 steps), so positions near the top of the window are under-trained and behave like extrapolation; the plain score falling from 60.1 at 32K to 45.7 at 64K fits that. If so, the honest description is "YaRN repairs an under-trained top octave", not "YaRN improves a trained range".
+
+The chat fine-tune keeps most of it: chat-sft-005 with YaRN x2 scores 77.0 at 4K, 59.6 at 32K and 54.5 at 64K (base with YaRN: 76.1, 58.8, 56.7). Every number in this paragraph is a single run of 650 samples with no confidence interval.
 
 Part of the gap to the leaders may be format, not ability. In Phase A diagnostic runs the model often stopped immediately on counting tasks or rambled ("Answer: Answer:") on question tasks, which looks like base-model format habit that instruction data may fix. A forced minimum of two new tokens only added 0.8 points at 4K (71.5 against 70.7 on 30 samples), so I do not use it.
 

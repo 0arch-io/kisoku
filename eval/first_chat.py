@@ -2,7 +2,7 @@
 Built from Joseph's own chat with chat-sft-006 (2026-10-06). SEEN probes are situations the 'self' training set covers;
 HELD-OUT probes are the same family but never described to the teacher, so they show whether a fix generalizes.
 usage: first_chat.py TAG [N]   -> prints a table and writes data/stress/first-chat-TAG.json"""
-import json, re, sys, urllib.request, os
+import json, os, re, sys, time, urllib.error, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 PORT = os.environ.get("KISOKU_PORT", "8911")   # llama-server port of the model under test
@@ -15,7 +15,12 @@ CODE = lambda o: "```" in o
 
 def ask(msgs, max_tokens=700):
     b = json.dumps({"messages": msgs, "max_tokens": max_tokens, "temperature": 0.6, "top_p": 0.9, "repeat_penalty": 1.05}).encode()
-    r = json.load(urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{PORT}/v1/chat/completions", b, {"Content-Type": "application/json"}), timeout=300))
+    for attempt in range(40):   # the server sits behind an ssh tunnel that can drop for a minute; wait for it to come back
+        try:
+            r = json.load(urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{PORT}/v1/chat/completions", b, {"Content-Type": "application/json"}), timeout=300))
+            break
+        except (urllib.error.URLError, ConnectionError, TimeoutError):
+            time.sleep(15)
     return (r["choices"][0]["message"].get("content") or "").strip()
 
 
