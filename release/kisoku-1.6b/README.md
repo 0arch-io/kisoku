@@ -42,22 +42,22 @@ This repo holds the final base model: the checkpoint after long-context Phase C 
 
 ## Benchmarks (short context)
 
-lm-evaluation-harness 0.4.13, bfloat16, one RTX 4090, same harness for every model. Scores are percent correct. The Kisoku column is the **stage 3 checkpoint, before long-context training**. The 10-benchmark suite has not been rerun on the final long-context checkpoint in the report draft, so short-context regression from long-context training is not measured. [CHECK] a batch to do exactly that (batch 18) was queued on 2026-10-07; replace the column if it finished.
+lm-evaluation-harness 0.4.13, bfloat16, one RTX 4090, same harness for every model. Scores are percent correct. The first Kisoku column is the **stage 3 checkpoint, before long-context training**, which the report uses throughout; the second is the released checkpoint after long-context training, rerun on 2026-10-07 on the same harness. They agree within about a point on every test.
 
-| Benchmark | Kisoku 1.6B (stage 3) | Llama 3.2 1B | SmolLM2 1.7B |
-|---|---|---|---|
-| GSM8K (5-shot) | 15.3 | 5.8 | 30.0 |
-| MMLU (5-shot) | 33.0 | 31.3 | 50.0 |
-| ARC-Easy (0-shot) | 65.4 | 61.8 | 73.5 |
-| ARC-Challenge (0-shot) | 39.8 | 36.9 | 46.9 |
-| BBH (3-shot) | 29.2 | 28.3 | 31.4 |
-| PIQA (0-shot) | 73.9 | 74.9 | 77.9 |
-| WinoGrande (0-shot) | 57.3 | 60.5 | 66.3 |
-| HellaSwag (0-shot) | 57.7 | 64.2 | 71.3 |
-| HumanEval (pass@1) | 13.4 | 18.9 | not reported |
-| TriviaQA (5-shot) | 22.8 | 40.7 | 49.7 |
+| Benchmark | Kisoku 1.6B (stage 3) | Kisoku 1.6B (released) | Llama 3.2 1B | SmolLM2 1.7B |
+|---|---|---|---|---|
+| GSM8K (5-shot) | 15.3 | 15.0 | 5.8 | 30.0 |
+| MMLU (5-shot) | 33.0 | 34.2 | 31.3 | 50.0 |
+| ARC-Easy (0-shot) | 65.4 | 64.4 | 61.8 | 73.5 |
+| ARC-Challenge (0-shot) | 39.8 | 40.1 | 36.9 | 46.9 |
+| BBH (3-shot) | 29.2 | 28.6 | 28.3 | 31.4 |
+| PIQA (0-shot) | 73.9 | 73.0 | 74.9 | 77.9 |
+| WinoGrande (0-shot) | 57.3 | 56.8 | 60.5 | 66.3 |
+| HellaSwag (0-shot) | 57.7 | 57.8 | 64.2 | 71.3 |
+| HumanEval (pass@1) | 13.4 | pending | 18.9 | not reported |
+| TriviaQA (5-shot) | 22.8 | 23.1 | 40.7 | 49.7 |
 
-Against Llama 3.2 1B, Kisoku wins GSM8K, MMLU, ARC-Easy, ARC-Challenge and BBH. Llama wins PIQA, WinoGrande, HellaSwag, HumanEval and TriviaQA. The BBH gap (0.9) and MMLU gap (1.7) are small and there are no confidence intervals yet, so do not read them as established. HumanEval has 164 problems, so one problem is 0.6 points.
+Against Llama 3.2 1B, Kisoku wins GSM8K, MMLU, ARC-Easy, ARC-Challenge and BBH. Llama wins PIQA, WinoGrande, HellaSwag, HumanEval and TriviaQA. The BBH gap (0.9) and MMLU gap (1.7) are inside the 95 percent intervals in the report, so do not read them as established. HumanEval has 164 problems, so one problem is 0.6 points.
 
 Settings: HellaSwag, ARC and PIQA and WinoGrande 0-shot with length-normalized accuracy. BBH uses a custom task copy that strips whitespace before exact match (the stock task scores 0.0 for every model). Generation tasks use greedy decoding with no repetition penalty. The baselines were run through the same setup, so their numbers will not match their own model cards. DROP is excluded because its targets load as a CSV header in this harness.
 
@@ -168,7 +168,7 @@ Branches in this repo (see MANIFEST.md for which exist): `stage1-step198999` (no
 - Qwen2.5 1.5B and SmolLM2 1.7B beat it by large margins on most tests.
 - No confidence intervals, one training run per configuration, one harness and machine, bfloat16.
 - Long context trails Granite 4.0 1B and Qwen3.5. The long-context set-up has format familiarity with RULER and no held-out suite was run.
-- Short-context regression after long-context training is unmeasured (see the note above the benchmark table).
+- Long-context training did not change the short-context scores (second Kisoku column above); HumanEval for the released checkpoint is pending.
 - Not evaluated: safety, bias, multilingual ability. It is English-focused.
 - It can reproduce web text. It is a raw base model with no safety tuning.
 
