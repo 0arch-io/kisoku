@@ -128,6 +128,10 @@ The full corpus used in the contamination scan (section 6) was 784 shards and ab
 
 **Stage 3 (steps 224,000 to 242,999).** Started 2026-09-27 at about 13.7 to 14.8 s per step, later about 13.3. Loss on the first steps jumped to 2.0 to 2.15 on the new data and settled to about 1.47 by the end (last step 242,999: 1.468). The learning rate decayed from 3e-4 along the schedule above. Two changes were needed here: the weight correction described in section 3, and turning off MaxText's document truncation (section 8). Stage 3 finished on 2026-09-30 with a clean exit.
 
+![Training loss. Top: pretraining loss against tokens seen, falling from 2.1 at 60B tokens to 1.84 at the end of stage 1, stepping down to 1.75 in stage 2 and to about 1.47 in stage 3 as the data mix changes. Bottom: Phase A loss falls from 1.9 to about 1.53 over 2,900 steps; Phases B and C hold at about 1.50 and 1.48.](fig-loss.svg)
+
+*Figure 2. Training loss. The pretraining log starts at step 28,650; the earlier log was not kept. The drops at the stage boundaries are data-mix changes, not learning-rate events.*
+
 **Long-context Phase A (32K).** Started from the stage 3 final parameters with a fresh optimizer. 2,900 steps (about 6B tokens) at 38.5 s per step, sequence length 32,768, per-device batch 1 with gradient accumulation 4, full rematerialization, vocabulary tiling 8, flash (splash) attention. Learning rate cosine from 1e-4 to 1e-5 with 2% warmup. Token mix 60% long, 40% short, where the short share is the stage 3 mixture and the long share is code repositories, science PDFs and PG19. Loss started at 3.75 (positions beyond 4K were untrained, so a high start is expected), and fell to about 2.0 to 2.3 by step 130. Phase A ended on 2026-10-01 at about 10:51 UTC.
 
 **Long-context Phase B (64K).** Started 2026-10-01 11:04 UTC from the Phase A final checkpoint (fresh optimizer). 2,860 steps (about 6B tokens) at 65.8 s per step, sequence length 65,536, gradient accumulation 2, vocabulary tiling 16, 1% warmup, same cosine LR range as Phase A. It uses the same mixture as Phase A. It completed all 2,860 steps. The final checkpoint is step 2859; the loss averaged 1.50 over the last 60 steps (last step 1.442; Phase A ended at 1.58).
@@ -551,4 +555,4 @@ Every placeholder in this draft:
 16. Verify the training-token figures for baselines against primary sources, and add formal citations (SmolLM3, ProLong, Olmo 3, arXiv 2412.18860, and others).
 17. Total TPU hours or chip-hours, and total out-of-pocket dollar cost.
 18. All release links and the final weights licence.
-19. Figures: loss curves across stages (score versus tokens is Figure 1).
+19. The score-versus-tokens figure (Figure 1) and the loss curves (Figure 2) are in. The loss log for the first 28,650 steps was not kept.
