@@ -25,6 +25,7 @@ note() { echo "# $*"; }
 # ---------- 1. download (read-only on the bucket) ----------
 # dir name in bucket -> local name under STAGE
 fetch() { # fetch <bucket subpath> <local dir>
+  [ "${SKIP_FETCH:-0}" = 1 ] && return 0   # SKIP_FETCH=1 re-runs the upload steps against an existing STAGE
   run mkdir -p "$STAGE/$2"
   run gsutil -m cp -r "$BUCKET/$1/*" "$STAGE/$2/"
 }
@@ -72,7 +73,7 @@ done
 # ---------- 4. upload ----------
 run "$HF" upload "$ORG/kisoku-1.6b"      "$STAGE/base-main" . --repo-type model --commit-message "Kisoku 1.6B base (final, long-context Phase C step 1299)"
 run "$HF" upload "$ORG/kisoku-1.6b-chat" "$STAGE/chat-main" . --repo-type model --commit-message "Kisoku 1.6B Chat preview (pass 9)"
-run "$HF" upload "$ORG/kisoku-1.6b-gguf" "$STAGE/gguf" . --repo-type model --include "*.gguf" "README.md" --commit-message "GGUF builds"
+run "$HF" upload "$ORG/kisoku-1.6b-gguf" "$STAGE/gguf" . --repo-type model --include "*.gguf" --include "README.md" --commit-message "GGUF builds"
 
 # Per-stage checkpoints as branches of the base repo (DECISION: confirm which to publish; stage 2 is missing).
 HFPY="${HFPY:-$(head -1 "$(command -v "$HF")" | sed 's/^#!//')}"   # the python that has huggingface_hub (the hf CLI's own)
