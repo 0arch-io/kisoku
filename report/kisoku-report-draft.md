@@ -451,8 +451,8 @@ Everything here is a plan, not a result.
 All links are placeholders until release. An earlier preview chat model (a supervised fine-tune of the stage 1 base) is already public on Hugging Face under 0arch-io, with GGUF quantizations. The newer chat model from section 7B is released as a preview. [TBD: its link and which pass is public.]
 
 - Final base weights, bf16 safetensors, Hugging Face format: [TBD: link]
-- Stage 1, stage 2 and stage 3 base checkpoints: [TBD: link]
-- Long-context checkpoints (Phase A, B, C): [TBD: link]
+- Stage 1 (step 198,999) and stage 3 (step 242,999) base checkpoints: [TBD: link]. The stage 2 checkpoint (step 223,999) was not kept: the run retained only its latest five checkpoints and I copied out stage 2's iterator state but not its parameters. Stage 3 started from it, so the weights are not lost, only that intermediate point.
+- Long-context checkpoints, Phase A final (step 2899), Phase B final (step 2859) and Phase C final (step 1299, which is the released base): [TBD: link]
 - GGUF builds for llama.cpp and Ollama: [TBD: link]
 - Training code, configs and run scripts (MaxText configuration, stage scripts, restart guard): [TBD: link]
 - Evaluation scripts and raw per-sample results: [TBD: link]
