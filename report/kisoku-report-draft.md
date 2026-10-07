@@ -472,11 +472,11 @@ This work was made possible by Google's TPU Research Cloud, which provided the T
 3. Ai2, "Olmo 3", arXiv:2512.13961, 2025.
 4. B. Peng, J. Quesnelle, H. Fan, E. Shippole, "YaRN: Efficient Context Window Extension of Large Language Models", ICLR 2024, arXiv:2309.00071.
 5. D. Su et al., "Nemotron-CC: Transforming Common Crawl into a Refined Long-Horizon Pretraining Dataset", arXiv:2412.02595, 2024.
-6. Y. Wang et al., "Ultra-FineWeb: Efficient Data Filtering and Verification for High-Quality LLM Training Data", arXiv:2505.05427, 2025.
+6. "Ultra-FineWeb: Efficient Data Filtering and Verification for High-Quality LLM Training Data", arXiv:2505.05427, 2025.
 7. R. Li et al., "StarCoder: may the source be with you!", arXiv:2305.06161, 2023.
 8. K. Paster, M. Dos Santos, Z. Azerbayev, J. Ba, "OpenWebMath: An Open Dataset of High-Quality Mathematical Web Text", arXiv:2310.06786, 2023.
-9. F. Zhou et al., "MegaMath: Pushing the Limits of Open Math Corpora", arXiv:2504.02807, 2025.
-10. E. Guha et al., "OpenThoughts: Data Recipes for Reasoning Models", arXiv:2506.04178, 2025.
+9. "MegaMath: Pushing the Limits of Open Math Corpora", arXiv:2504.02807, 2025.
+10. "OpenThoughts: Data Recipes for Reasoning Models", arXiv:2506.04178, 2025.
 11. J. W. Rae et al., "Compressive Transformers for Long-Range Sequence Modelling", arXiv:1911.05507, 2019 (the PG-19 dataset).
 12. C.-P. Hsieh et al., "RULER: What's the Real Context Size of Your Long-Context Language Models?", arXiv:2404.06654, 2024.
 13. J. Liu et al., "Muon is Scalable for LLM Training", arXiv:2502.16982, 2025; K. Jordan et al., "Muon: An optimizer for hidden layers in neural networks", 2024.
