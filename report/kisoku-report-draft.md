@@ -289,16 +289,16 @@ Kisoku v1 is the public kisoku-3b-base: 3B parameters and about 60 billion train
 
 | Benchmark | Kisoku v1 (3B, about 60B tokens) | Kisoku v2 base (1.6B, about 500B tokens) |
 |---|---|---|
-| HellaSwag | 29.0 | 57.8 | 57.7 |
-| ARC-Easy | 27.1 | 64.4 | 65.4 |
-| ARC-Challenge | 24.6 | 40.1 | 39.8 |
-| PIQA | 54.1 | 73.0 | 73.9 |
-| WinoGrande | 51.1 | 56.8 | 57.3 |
-| MMLU | 26.0 | 34.2 | 33.0 |
-| GSM8K | 0.0 | 15.0 | 15.3 |
-| BBH | 0.2 | 28.6 | 29.2 |
-| HumanEval | 0.0 | pending | 13.4 |
-| TriviaQA | 0.2 | 23.1 | 22.8 |
+| HellaSwag | 29.0 | 57.7 |
+| ARC-Easy | 27.1 | 65.4 |
+| ARC-Challenge | 24.6 | 39.8 |
+| PIQA | 54.1 | 73.9 |
+| WinoGrande | 51.1 | 57.3 |
+| MMLU | 26.0 | 33.0 |
+| GSM8K | 0.0 | 15.3 |
+| BBH | 0.2 | 29.2 |
+| HumanEval | 0.0 | 13.4 |
+| TriviaQA | 0.2 | 22.8 |
 
 v1 is near guessing level on the multiple-choice tests and close to zero on the generation tests. v2 is better on all ten, with half the parameters. I cannot say how much of that comes from the extra tokens and how much from the cleaner tokenizer setup, the data mix and the recipe, because I ran no ablations between them.
 
@@ -389,16 +389,16 @@ A small gain, concentrated in short phrases. The case that prompted it (a misspe
 
 | Test | Base, stage 3 | Base, final (released) | Chat, pass 5 | Chat, pass 9 (released) |
 |---|---|---|---|---|
-| GSM8K | 15.3 | 19.6 | 20.6 |
-| HumanEval | 13.4 | not run | 14.0 |
-| ARC-Easy | 65.4 | 67.1 | 66.0 |
-| ARC-Challenge | 39.8 | 42.7 | 42.2 |
-| WinoGrande | 57.3 | 58.0 | 57.2 |
-| PIQA | 73.9 | 73.6 | 73.0 |
-| HellaSwag | 57.7 | 57.3 | 57.2 |
-| TriviaQA | 22.8 | 21.5 | 20.8 |
-| MMLU | 33.0 | 29.8 | 29.8 |
-| BBH | 29.2 | 25.2 | 26.3 |
+| GSM8K | 15.3 | 15.0 | 19.6 | 20.6 |
+| HumanEval | 13.4 | pending | not run | 14.0 |
+| ARC-Easy | 65.4 | 64.4 | 67.1 | 66.0 |
+| ARC-Challenge | 39.8 | 40.1 | 42.7 | 42.2 |
+| WinoGrande | 57.3 | 56.8 | 58.0 | 57.2 |
+| PIQA | 73.9 | 73.0 | 73.6 | 73.0 |
+| HellaSwag | 57.7 | 57.8 | 57.3 | 57.2 |
+| TriviaQA | 22.8 | 23.1 | 21.5 | 20.8 |
+| MMLU | 33.0 | 34.2 | 29.8 | 29.8 |
+| BBH | 29.2 | 28.6 | 25.2 | 26.3 |
 
 Against the released base, math went up by 5 points, MMLU went down by 4, BBH by 2, and the rest moved by about a point or less. The two chat models agree within a point on every test, so the later passes (corrections, self-talk, typing noise) did not move the benchmarks. The two base columns show that long-context training itself changed nothing outside the intervals of section 5: every test moved by about a point, MMLU by 1.2 up. So the MMLU and BBH drops are from chat fine-tuning. The released base's HumanEval is pending (it needs the machine that executes generated code). The chat model's long-context scores (pass 9 with YaRN) are in section 7.
 
