@@ -39,7 +39,7 @@ Training tokens, as I understand the published figures (to be verified against p
 | SmolLM2 1.7B | 1.7B | 11T | |
 | Qwen2.5 1.5B | 1.5B | 18T | |
 
-Kisoku's token figure covers pretraining stages 1 to 3 only (the long-context phases add about 12B tokens before Phase C; see section 4). [TBD: exact total token count and a score-versus-tokens figure.]
+Kisoku's token figure covers pretraining stages 1 to 3 only (the long-context phases add about 12B tokens before Phase C; see section 4). Exact totals, counting packed sequence slots at 2,097,152 tokens per step: stages 1 to 3, 243,000 steps, 509.6B; Phase A 6.08B; Phase B 6.00B; Phase C 2.73B; all phases 524.4B. [TBD: score-versus-tokens figure.]
 
 Three other results are reported later. Long context (section 7): with YaRN x2 at inference, Kisoku scores 56.7 on RULER at 64K against 49.2 for Llama 3.2 1B and 43.2 against 43.1 at 128K, but Granite 4.0 1B and the Qwen3.5 models are ahead at every length, and my earlier goal of leading sub-2B models at 64K to 128K was not reached. Growth from v1 (section 7A): 1.6B and about 500B tokens against 3B and about 60B tokens. Chat (section 7B): a preview, with known failures.
 
@@ -57,7 +57,7 @@ Kisoku uses a Qwen3-style decoder block, implemented in MaxText and trained in J
 - Pretraining context: 4096 tokens; extended to 32K and then 64K in the long-context phases
 - Parameters: 1.6B (the "1B" in some of my run names is a leftover; the exported model is 1.6B)
 
-[TBD: exact parameter count by component.]
+Exact count, from the configuration above: tied embedding and output head 262,668,288; per layer, attention 10,485,760, MLP 50,331,648, norms 4,352; final norm 2,048; 22 layers 1,338,078,720; total 1,600,749,056. MaxText logs the same figure as 1.601 billion.
 
 I kept the RoPE base at 5M for the long-context phases. A minimum-theta table I consulted during planning puts the requirement for 64K at about 2.1M, so 5M leaves margin. The route to 128K is YaRN with factor 2 applied at inference over the 64K-trained model. I rehearsed that step on the 32K-trained Phase A checkpoint and then measured it on the final checkpoint (section 7).
 
@@ -77,7 +77,7 @@ All data was prepared as tokenized text records and streamed from cloud storage.
 
 | Source | Records | Tokens | Licence |
 |---|---|---|---|
-| The Stack v1 repository-level concatenation (via ProLong) | 69,120 | about 4.5B | [TBD: confirm] |
+| The Stack v1 repository-level concatenation (via ProLong) | 69,120 | about 4.5B (69,120 records at about 65,460 tokens each) | |
 | Dolma 3 Longmino science PDFs | 145,526 | about 5.7B | ODC-By |
 | PG19 books | 28,602 | about 2.9B | Apache-2.0 |
 
@@ -106,9 +106,9 @@ The full corpus used in the contamination scan (section 6) was 784 shards and ab
 
 **Hardware and framework.** A TPU v4-32 (four hosts) from Google's TRC, running MaxText with data parallelism over fully sharded parameters. Evaluation and later data work ran on one RTX 4090 under WSL. Throughput in the first long-context phase was 62.9 TFLOP/s per device, and the original pretrain log showed about 105 TFLOP/s per device.
 
-**Optimizer.** Muon, as I recorded for the supervised fine-tuning run ("same as pretrain"). [TBD: Muon hyperparameters, weight decay, gradient clipping, and the embedding/output optimizer split.]
+**Optimizer.** Muon, as I recorded for the supervised fine-tuning run ("same as pretrain"). Muon momentum 0.95, weight decay 0.1, consistent-RMS scaling 0.2, applied to the two-dimensional attention and MLP matrices. The tied embedding (which is also the output head), norms and biases use AdamW with beta1 0.9, beta2 0.95, epsilon 1e-8 and weight decay 0.1. One peak learning rate, 3e-4, for both. Gradient clipping at 1.0.
 
-**Schedule.** The learning rate schedule was written for 243,000 steps, with a warmup-stable-decay shape: a peak of 3e-4, with decay starting at 0.9 times 243,000 = 218,700 and ending at 9.9e-5 at step 243,000. [TBD: stage 1 warmup length.] Each step was about 2.1M tokens at 4096-token sequences.
+**Schedule.** The learning rate schedule was written for 243,000 steps, with a warmup-stable-decay shape: a peak of 3e-4, with decay starting at 0.9 times 243,000 = 218,700 and ending at 9.9e-5 at step 243,000. Warmup was 0.5 percent of the schedule, 1,215 steps. Each step was about 2.1M tokens at 4096-token sequences.
 
 **Stage 1 (steps 0 to 198,999, about 414B tokens).** Loss ended around 1.81 to 1.85. Step time was about 13.28 s. Because the schedule was written for 243,000 steps, the model ended stage 1 at the full 3e-4 learning rate, not annealed. The run was interrupted many times (section 8); it logged 41 starts.
 
@@ -118,9 +118,9 @@ The full corpus used in the contamination scan (section 6) was 784 shards and ab
 
 **Long-context Phase A (32K).** Started from the stage 3 final parameters with a fresh optimizer. 2,900 steps (about 6B tokens) at 38.5 s per step, sequence length 32,768, per-device batch 1 with gradient accumulation 4, full rematerialization, vocabulary tiling 8, flash (splash) attention. Learning rate cosine from 1e-4 to 1e-5 with 2% warmup. Token mix 60% long, 40% short, where the short share is the stage 3 mixture and the long share is code repositories, science PDFs and PG19. Loss started at 3.75 (positions beyond 4K were untrained, so a high start is expected), and fell to about 2.0 to 2.3 by step 130. Phase A ended on 2026-10-01 at about 10:51 UTC.
 
-**Long-context Phase B (64K).** Started 2026-10-01 11:04 UTC from the Phase A final checkpoint (fresh optimizer). 2,860 steps (about 6B tokens) at 65.8 s per step, sequence length 65,536, gradient accumulation 2, vocabulary tiling 16, 1% warmup, same cosine LR range as Phase A. It uses the same mixture as Phase A. It completed all 2,860 steps. [TBD: Phase B final loss and checkpoint.]
+**Long-context Phase B (64K).** Started 2026-10-01 11:04 UTC from the Phase A final checkpoint (fresh optimizer). 2,860 steps (about 6B tokens) at 65.8 s per step, sequence length 65,536, gradient accumulation 2, vocabulary tiling 16, 1% warmup, same cosine LR range as Phase A. It uses the same mixture as Phase A. It completed all 2,860 steps. The final checkpoint is step 2859. [TBD: Phase B final loss; it is in the worker log, not in the bucket.]
 
-**Long-context Phase C (64K with synthetic tasks).** Started automatically when Phase B ended and ran 1,300 steps, learning rate cosine from 5e-5 to 5e-6 with 2% warmup, initialized from the Phase B final. Token shares: short 40%, code 15%, science PDFs 15%, PG19 12%, synthetic tasks 18%. Final loss 1.764. Details in section 7. [TBD: Phase C wall-clock time.]
+**Long-context Phase C (64K with synthetic tasks).** Started automatically when Phase B ended and ran 1,300 steps, learning rate cosine from 5e-5 to 5e-6 with 2% warmup, initialized from the Phase B final. Token shares: short 40%, code 15%, science PDFs 15%, PG19 12%, synthetic tasks 18%. Final loss 1.764. Details in section 7. Phase C started about 2026-10-03 15:38 UTC and its final checkpoint was written 2026-10-04 15:24 UTC, about 23.8 hours at 65.9 seconds per step.
 
 A few training-system facts that affected results. Checkpoints were written every 1,000 steps in stages 1 to 3 (every 250 in the long phases), and only the latest five were retained, so I copied out the final checkpoint of each stage by hand. A crash restart resumes from the run's own latest checkpoint, not from the initial load path.
 
