@@ -78,7 +78,7 @@ ollama create kisoku-chat -f Modelfile
 ollama run kisoku-chat
 ```
 
-This Modelfile is the earlier preview model's with two changes: no `repeat_penalty` (a repetition penalty hurt every Kisoku generation score in my tests) and `num_ctx` raised from 4096 to 8192. The template prints every message including the system one; the leading BOS token comes from the GGUF. Tested 2026-10-07 with a two-turn chat in Ollama 0.x on the Q8_0 file: the template and stop tokens work (the answer it gave about Canberra's population was wrong, which is the confident-wrong-answer failure on the chat card).
+This Modelfile is the earlier preview model's with two changes: no `repeat_penalty` (a repetition penalty hurt every Kisoku generation score in my tests) and `num_ctx` raised from 4096 to 8192. The template prints every message including the system one; the leading BOS token comes from the GGUF. Tested 2026-10-07 with a two-turn chat in Ollama 0.40 on the Q8_0 file: the template and stop tokens work (the answer it gave about Canberra's population was wrong, which is the confident-wrong-answer failure on the chat card).
 
 For the base model, a plain completion Modelfile works: `FROM ./kisoku-1.6b-base-Q8_0.gguf`, `TEMPLATE "{{ .Prompt }}"`, `PARAMETER temperature 0.7`.
 
