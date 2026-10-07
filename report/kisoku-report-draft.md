@@ -45,7 +45,7 @@ Kisoku's token figure covers pretraining stages 1 to 3 only (the long-context ph
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Stage 1 end (step 198,999) | 417B | 6.4 | 33.2 | 64.1 | 39.4 | 28.2 | 73.1 | 57.3 | 56.9 | 9.1 | 22.4 | 42.3 |
 | Stage 3 end (step 242,999) | 510B | 15.3 | 33.0 | 65.4 | 39.8 | 29.2 | 73.9 | 57.3 | 57.7 | 13.4 | 22.8 | 43.8 |
-| Released (Phase C end) | 524B | 15.0 | 34.2 | 64.4 | 40.1 | 28.6 | 73.0 | 56.8 | 57.8 | pending | 23.1 | 43.7 |
+| Released (Phase C end) | 524B | 15.0 | 34.2 | 64.4 | 40.1 | 28.6 | 73.0 | 56.8 | 57.8 | 14.6 | 23.1 | 43.7 |
 
 Stages 2 and 3 (93B tokens, the math and reasoning mix plus the anneal) bought the GSM8K and HumanEval gains and little else; the long-context phases (15B tokens) changed nothing measurable at short context.
 
@@ -398,7 +398,7 @@ A small gain, concentrated in short phrases. The case that prompted it (a misspe
 | Test | Base, stage 3 | Base, final (released) | Chat, pass 5 | Chat, pass 9 (released) |
 |---|---|---|---|---|
 | GSM8K | 15.3 | 15.0 | 19.6 | 20.6 |
-| HumanEval | 13.4 | pending | not run | 14.0 |
+| HumanEval | 13.4 | 14.6 | not run | 14.0 |
 | ARC-Easy | 65.4 | 64.4 | 67.1 | 66.0 |
 | ARC-Challenge | 39.8 | 40.1 | 42.7 | 42.2 |
 | WinoGrande | 57.3 | 56.8 | 58.0 | 57.2 |
@@ -408,7 +408,7 @@ A small gain, concentrated in short phrases. The case that prompted it (a misspe
 | MMLU | 33.0 | 34.2 | 29.8 | 29.8 |
 | BBH | 29.2 | 28.6 | 25.2 | 26.3 |
 
-Against the released base, math went up by 5 points, MMLU went down by 4, BBH by 2, and the rest moved by about a point or less. The two chat models agree within a point on every test, so the later passes (corrections, self-talk, typing noise) did not move the benchmarks. The two base columns show that long-context training itself changed nothing outside the intervals of section 5: every test moved by about a point, MMLU by 1.2 up. So the MMLU and BBH drops are from chat fine-tuning. The released base's HumanEval is pending (it needs the machine that executes generated code). The chat model's long-context scores (pass 9 with YaRN) are in section 7.
+Against the released base, math went up by 5 points, MMLU went down by 4, BBH by 2, and the rest moved by about a point or less. The two chat models agree within a point on every test, so the later passes (corrections, self-talk, typing noise) did not move the benchmarks. The two base columns show that long-context training itself changed nothing outside the intervals of section 5: every test moved by about a point, MMLU by 1.2 up. So the MMLU and BBH drops are from chat fine-tuning. The chat model's long-context scores (pass 9 with YaRN) are in section 7.
 
 ## 8. What went wrong
 
@@ -451,7 +451,7 @@ This section is long on purpose. Each item cost time, and most are the kind of t
 - **Statistical uncertainty.** No confidence intervals yet. Several differences, including BBH and MMLU against Llama and everything on HumanEval, are within what I would expect from noise.
 - **Contamination audit limits.** Exact matches only (section 6). The SFT data was matched against the same test sets with the same method and no hits remain (section 7B), with the same limit.
 - **Long context trails the leaders.** Kisoku is ahead of Llama 3.2 1B at most lengths but behind Granite 4.0 1B and both Qwen3.5 models at every length, and the goal of leading sub-2B models at 64K to 128K was not reached. The Phase C synthetic tasks resemble RULER, so the RULER scores are partly format familiarity, and a held-out long-context suite has not been run. One checkpoint, no confidence intervals.
-- **Short-context regression after long-context training**: none found. The released checkpoint reran the suite (section 7B): every test is within about a point of the stage 3 checkpoint, MMLU 1.2 higher, all inside the section 5 intervals. HumanEval for the released checkpoint is pending.
+- **Short-context regression after long-context training**: none found. The released checkpoint reran the suite (section 7B): every test is within about a point of the stage 3 checkpoint, MMLU 1.2 higher, all inside the section 5 intervals (HumanEval 14.6 against 13.4).
 - **Not evaluated:** safety and bias behavior, multilingual ability. Instruction following and tool use have only been probed by hand and on small held-out sets (section 7B).
 - **The chat model is a preview.** It can lose the thread in a longer conversation, still makes unneeded tool calls on some probes, and its "I don't know" behavior trades abstention against coverage (section 7B); its benchmark and long-context scores are in that section, and on a held-out conversation test it is 6 to 8 points behind Llama 3.2 1B Instruct.
 - **One evaluation setup.** One harness version, one machine, bfloat16, and my own prompt settings.

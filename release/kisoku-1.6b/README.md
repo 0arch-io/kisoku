@@ -54,7 +54,7 @@ lm-evaluation-harness 0.4.13, bfloat16, one RTX 4090, same harness for every mod
 | PIQA (0-shot) | 73.9 | 73.0 | 74.9 | 77.9 |
 | WinoGrande (0-shot) | 57.3 | 56.8 | 60.5 | 66.3 |
 | HellaSwag (0-shot) | 57.7 | 57.8 | 64.2 | 71.3 |
-| HumanEval (pass@1) | 13.4 | pending | 18.9 | not reported |
+| HumanEval (pass@1) | 13.4 | 14.6 | 18.9 | not reported |
 | TriviaQA (5-shot) | 22.8 | 23.1 | 40.7 | 49.7 |
 
 Against Llama 3.2 1B, Kisoku wins GSM8K, MMLU, ARC-Easy, ARC-Challenge and BBH. Llama wins PIQA, WinoGrande, HellaSwag, HumanEval and TriviaQA. The BBH gap (0.9) and MMLU gap (1.7) are inside the 95 percent intervals in the report, so do not read them as established. HumanEval has 164 problems, so one problem is 0.6 points.
@@ -168,7 +168,7 @@ Branches in this repo (see MANIFEST.md for which exist): `stage1-step198999` (no
 - Qwen2.5 1.5B and SmolLM2 1.7B beat it by large margins on most tests.
 - No confidence intervals, one training run per configuration, one harness and machine, bfloat16.
 - Long context trails Granite 4.0 1B and Qwen3.5. The long-context set-up has format familiarity with RULER and no held-out suite was run.
-- Long-context training did not change the short-context scores (second Kisoku column above); HumanEval for the released checkpoint is pending.
+- Long-context training did not change the short-context scores (second Kisoku column above).
 - Not evaluated: safety, bias, multilingual ability. It is English-focused.
 - It can reproduce web text. It is a raw base model with no safety tuning.
 
