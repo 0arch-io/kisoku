@@ -39,7 +39,15 @@ Training tokens, as I understand the published figures (to be verified against p
 | SmolLM2 1.7B | 1.7B | 11T | |
 | Qwen2.5 1.5B | 1.5B | 18T | |
 
-Kisoku's token figure covers pretraining stages 1 to 3 only (the long-context phases add about 12B tokens before Phase C; see section 4). Exact totals, counting packed sequence slots at 2,097,152 tokens per step: stages 1 to 3, 243,000 steps, 509.6B; Phase A 6.08B; Phase B 6.00B; Phase C 2.73B; all phases 524.4B. [TBD: score-versus-tokens figure.]
+Kisoku's token figure covers pretraining stages 1 to 3 only (the long-context phases add about 12B tokens before Phase C; see section 4). Exact totals, counting packed sequence slots at 2,097,152 tokens per step: stages 1 to 3, 243,000 steps, 509.6B; Phase A 6.08B; Phase B 6.00B; Phase C 2.73B; all phases 524.4B. Three checkpoints were run on the full suite, which is too few for a curve but shows the shape:
+
+| Checkpoint | Tokens seen | GSM8K | MMLU | ARC-E | ARC-C | BBH | PIQA | WinoGrande | HellaSwag | HumanEval | TriviaQA | Mean of 9 (no HumanEval) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Stage 1 end (step 198,999) | 417B | 6.4 | 33.2 | 64.1 | 39.4 | 28.2 | 73.1 | 57.3 | 56.9 | 9.1 | 22.4 | 42.3 |
+| Stage 3 end (step 242,999) | 510B | 15.3 | 33.0 | 65.4 | 39.8 | 29.2 | 73.9 | 57.3 | 57.7 | 13.4 | 22.8 | 43.8 |
+| Released (Phase C end) | 524B | 15.0 | 34.2 | 64.4 | 40.1 | 28.6 | 73.0 | 56.8 | 57.8 | pending | 23.1 | 43.7 |
+
+Stages 2 and 3 (93B tokens, the math and reasoning mix plus the anneal) bought the GSM8K and HumanEval gains and little else; the long-context phases (15B tokens) changed nothing measurable at short context.
 
 Three other results are reported later. Long context (section 7): with YaRN x2 at inference, Kisoku scores 56.7 on RULER at 64K against 49.2 for Llama 3.2 1B and 43.2 against 43.1 at 128K, but Granite 4.0 1B and the Qwen3.5 models are ahead at every length, and my earlier goal of leading sub-2B models at 64K to 128K was not reached. Growth from v1 (section 7A): 1.6B and about 500B tokens against 3B and about 60B tokens. Chat (section 7B): a preview, with known failures.
 
