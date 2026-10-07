@@ -1,5 +1,5 @@
 ---
-license: PLACEHOLDER_LICENCE
+license: apache-2.0
 language:
 - en
 pipeline_tag: text-generation
@@ -178,7 +178,7 @@ For each test item I probed the first and last 80 characters (61,366 probes over
 
 ## Licence note
 
-Licence: PLACEHOLDER_LICENCE. [CHECK] Final decision pending. The tokenizer is the Llama 3 vocabulary (128,000 base tokens plus 256 special tokens; 100,256 of the base tokens are identical to tiktoken `cl100k_base`). The Llama 3.2 Community License does not mention tokenizers, and other from-scratch models ship the same vocabulary under Apache-2.0 without a Llama name, but I am not a lawyer. Training data licences vary: Nemotron-CC and Nemotron-CC-Math-v1 allow publishing models trained on them but not redistributing the text, so the data manifests list sources and counts only.
+Licence: Apache 2.0. The tokenizer is the Llama 3 vocabulary (128,000 base tokens plus 256 special tokens; 100,256 of the base tokens are identical to tiktoken `cl100k_base`). The Llama 3.2 Community License does not mention tokenizers, and other from-scratch models ship the same vocabulary under Apache-2.0 without a Llama name, but I am not a lawyer. Training data licences vary: Nemotron-CC and Nemotron-CC-Math-v1 allow publishing models trained on them but not redistributing the text, so the data manifests list sources and counts only.
 
 ## Citation
 

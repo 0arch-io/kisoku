@@ -67,4 +67,4 @@ The chat model is released so the fine-tuning work in the report can be checked,
 
 ## Licence
 
-[Joseph: licence here, plus the Llama 3 tokenizer note.]
+Apache 2.0 for the weights, GGUF builds, code and report. The tokenizer vocabulary is Llama 3's; see the base card's note. Not released: pretraining text (redistribution forbidden by the Nemotron agreements; manifests only) and the teacher-written chat conversations.

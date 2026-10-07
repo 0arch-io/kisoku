@@ -1,5 +1,5 @@
 ---
-license: PLACEHOLDER_LICENCE
+license: apache-2.0
 language:
 - en
 pipeline_tag: text-generation
@@ -84,4 +84,4 @@ For the base model, a plain completion Modelfile works: `FROM ./kisoku-1.6b-base
 
 ## Limitations and licence
 
-Same as the model cards. Licence: PLACEHOLDER_LICENCE (see the base card's note about the Llama 3 tokenizer vocabulary).
+Same as the model cards. Licence: Apache 2.0 (see the base card's note about the Llama 3 tokenizer vocabulary).

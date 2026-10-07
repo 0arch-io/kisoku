@@ -23,7 +23,7 @@ Existing 0arch-io repos for reference (read-only search): `kisoku-3b-base`, `kis
 | 11 | same: `kisoku-1.6b-base-longC-1299-F16 / Q8_0 / Q4_K_M.gguf` | `hf/gguf-kisoku-1.6b-base-longC-1299/` (F16 from worker 0, Q8 and Q4 from the Mac, 2026-10-07; plain rope config, YaRN is a llama.cpp runtime flag) | 3.2 / 1.7 / 1 GB | yes | exists (Q8/Q4 uploading) |
 | 12 | `0arch-io/kisoku-1.6b-maxtext` (raw MaxText checkpoints for continued training: stage 1, stage 3, A, B, C final) | `runs/kisoku-v2-1b-{stage1,stage3,longctx-a,longctx-b,longctx-c}-final/` | about 12 GB each, 60 GB | DECISION (default no; the report promises "intermediate checkpoints", HF exports cover that) | exists |
 | 13 | `0arch-io/kisoku-1.6b-eval` (dataset): raw per-sample results | `eval/results-20261005/`, `eval/cti-batch14/`, `eval/contamination-20261001/`; local `data/eval-results/*.tgz` (83 MB) | about 100 MB | yes | exists. Strip personal paths from logs first |
-| 14 | `0arch-io/kisoku-1.6b-sft-data` (dataset): teacher-written conversations only | `sft/kisoku-gen2-20261005/` (about 142 MB local copy `data/gen2/`) and `sft/deepseek-gen-20261002/` | about 150 MB | DECISION | exists. Do not publish merged `sft/kisoku-sft-v10/` parquet (mixes public datasets with their own licences). Check DeepSeek API terms on redistributing outputs. Remove `_spend.json`, `_run*.log`, `_failed.txt` |
+| 14 | `0arch-io/kisoku-1.6b-sft-data` (dataset): teacher-written conversations only | `sft/kisoku-gen2-20261005/` (about 142 MB local copy `data/gen2/`) and `sft/deepseek-gen-20261002/` | about 150 MB | NO (decided 2026-10-07) | exists. Do not publish merged `sft/kisoku-sft-v10/` parquet (mixes public datasets with their own licences). Check DeepSeek API terms on redistributing outputs. Remove `_spend.json`, `_run*.log`, `_failed.txt` |
 | 15 | same dataset or separate: held-out conversation test (297 scripts, judge outputs) | local `data/stress/` (240 MB; `scripts.jsonl`, `judge-*.jsonl`, `rollout-*.jsonl`) | up to 240 MB | DECISION (publish scripts, held-out ids and judge verdicts; rollouts optional) | exists |
 | 16 | long-context synthetic task samples | `datasets/longctx-synth-tasks/` (22,386 docs, 575.5M tokens) | large | DECISION (default: generator plus a few hundred samples; text derives from PG19 and Dolma 3 PDFs) | exists |
 | 17 | `0arch-io/kisoku-1.6b-preview` and `-preview-GGUF` | already public | n/a | already public | no action. Optionally add a pointer to the new repos |
@@ -77,7 +77,7 @@ Also flag: `sft/*.py` mention DeepSeek by name in system prompts and filters (fi
 
 ## 5. Open decisions
 
-1. Licence (`PLACEHOLDER_LICENCE`): earlier Kisoku repos use Apache-2.0 or MIT. Llama 3 tokenizer wording still undecided.
+1. Licence: DECIDED 2026-10-07, Apache 2.0 for weights, GGUF, code and report. SFT data (row 14) and pretraining text stay private; held-out scripts and judge verdicts (row 15) ship with the eval dataset.
 2. Default rope config: YaRN x2 (the cards assume yes) or plain.
 3. Which per-stage checkpoints go public and how (branches vs repos); what to do about missing stage 2.
 4. Raw MaxText checkpoints (60 GB): publish or not.

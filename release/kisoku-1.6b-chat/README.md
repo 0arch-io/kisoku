@@ -1,5 +1,5 @@
 ---
-license: PLACEHOLDER_LICENCE
+license: apache-2.0
 language:
 - en
 pipeline_tag: text-generation
@@ -136,7 +136,7 @@ This card's failure list above is the main one. Also: English-focused, one evalu
 
 ## Licence note and citation
 
-Licence: PLACEHOLDER_LICENCE. The tokenizer is the Llama 3 vocabulary; see the base card's licence note. Teacher-written data came from DeepSeek-V4.1-Flash.
+Licence: Apache 2.0. The tokenizer is the Llama 3 vocabulary; see the base card's licence note. Teacher-written data came from DeepSeek-V4.1-Flash.
 
 ```bibtex
 @misc{rodriguez2026kisoku,

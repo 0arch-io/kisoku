@@ -488,7 +488,7 @@ Links go live on release day. An earlier preview chat model (a supervised fine-t
 - Contamination audit scripts and results: `contamination/` in the same repository
 - Synthetic long-context task generator and samples: `longctx-synth/` in the same repository
 - Data manifests (sources, counts and mix weights; no text for sources whose licences forbid redistribution): `README.md` and `longctx-synth/manifest.json`, `sft/*-summary.json` in the same repository
-- Model licence for the final weights: [TBD: licence; note the Llama 3.2 tokenizer terms]
+- Licence: the weights (base and chat), the GGUF builds, the code and this report are released under Apache 2.0. The tokenizer note in section 3 applies: the vocabulary is Llama 3's, which the Llama 3.2 Community License does not mention, and other from-scratch models ship it under Apache 2.0; I am not a lawyer. Not released: the pretraining text (the Nemotron sets forbid redistribution; manifests only) and the teacher-written chat conversations (DeepSeek outputs mixed with datasets under their own licences). The held-out conversation scripts and judge verdicts are released with the evaluation data.
 
 ## 13. Acknowledgements
 
