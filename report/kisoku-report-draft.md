@@ -25,6 +25,10 @@ All numbers below are for base (non-chat) checkpoints, measured with lm-evaluati
 | HumanEval (pass@1) | 13.4 | 9.1 | **18.9** | 6.7 | not reported | 37.2 |
 | TriviaQA (5-shot) | 22.8 | 22.4 | **40.7** | 35.7 | 49.7 | 39.7 |
 
+![Mean of nine benchmarks against pretraining tokens, log scale. Kisoku's three checkpoints sit at about 0.5T tokens level with Gemma 3 1B at 2T and Llama 3.2 1B at 9T; SmolLM2 and Qwen2.5 are 11 points higher at 11T and 18T.](fig-efficiency.svg)
+
+*Figure 1. Score against training data, mean of nine benchmarks (HumanEval left out so every model has a value), same harness and machine. Token counts as reported by each model's authors.*
+
 Bold marks the winner of the Kisoku stage 3 versus Llama 3.2 1B pair only, not the row maximum. Kisoku wins GSM8K, MMLU, ARC-Easy, ARC-Challenge and BBH. Llama wins PIQA, WinoGrande, HellaSwag, HumanEval and TriviaQA. Several of Kisoku's wins are small: BBH by 0.9 points, MMLU by 1.7. I have not yet computed confidence intervals (see Open items), so I would not read those two as established. The large gaps are GSM8K in Kisoku's favor (+9.5) and TriviaQA (-17.9) and HellaSwag (-6.5) in Llama's favor.
 
 Where Kisoku stands against the rest: SmolLM2 1.7B and Qwen2.5 1.5B are ahead of Kisoku on nearly every test, often by a wide margin (Qwen2.5 scores 60.7 on GSM8K and 37.2 on HumanEval). Gemma 3 1B is mixed against Kisoku. Stages 2 and 3 improved math and code a lot (GSM8K 6.4 to 15.3, HumanEval 9.1 to 13.4) and left general knowledge roughly flat.
@@ -547,4 +551,4 @@ Every placeholder in this draft:
 16. Verify the training-token figures for baselines against primary sources, and add formal citations (SmolLM3, ProLong, Olmo 3, arXiv 2412.18860, and others).
 17. Total TPU hours or chip-hours, and total out-of-pocket dollar cost.
 18. All release links and the final weights licence.
-19. Figures: loss curves across stages, score versus tokens.
+19. Figures: loss curves across stages (score versus tokens is Figure 1).

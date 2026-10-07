@@ -16,6 +16,8 @@ Kisoku 1.6B is a base language model pretrained from scratch by one person on a 
 
 ## Headline numbers
 
+Chart for the post: `report/fig-efficiency.svg` (PNG beside it in `release/`).
+
 Same harness (lm-evaluation-harness 0.4.13, bf16), same machine, percent correct.
 
 | Benchmark | Kisoku 1.6B | Llama 3.2 1B |
