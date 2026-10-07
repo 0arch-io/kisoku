@@ -1,7 +1,7 @@
 """Rewrite a Tunix DPO checkpoint (<run>/checkpoints/<step>/model_params, an nnx state of TunixMaxTextAdapter: keys
 ('base', ..., 'value')) as the params-only layout the SFT checkpoints use (<step>/items: ('params', 'params', ...)), so
 convert-chat.sh / export-chat-shm.sh can export it unchanged. Runs on CPU (JAX_PLATFORMS=cpu), safe while the TPU trains.
-usage: JAX_PLATFORMS=cpu python dpo_to_items.py gs://kisoku-v2-training/runs/<run>/checkpoints/<step>"""
+usage: JAX_PLATFORMS=cpu python dpo_to_items.py gs://$KISOKU_BUCKET/runs/<run>/checkpoints/<step>"""
 import sys
 import numpy as np
 import orbax.checkpoint as ocp

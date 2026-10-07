@@ -3,7 +3,7 @@ import os, sys, json, subprocess, time, collections
 from multiprocessing import Pool
 sys.path.insert(0, os.path.expanduser('~/maxtext-tools/src'))
 from common import norm
-BUCKET = 'gs://kisoku-v2-training/datasets'
+BUCKET = 'gs://' + os.environ['KISOKU_BUCKET'] + '/datasets'
 DATASETS = ['finemath-4plus', 'open-web-math', 'megamath-web-pro', 'nemotron-cc-math-4plus', 'openthoughts3-text',
             'longctx-code-repos', 'longctx-pg19', 'longctx-science-pdfs',
             'starcoderdata-text', 'nemotron-cc-v2.1-hqs', 'ultra-fineweb-en-text']

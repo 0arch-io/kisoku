@@ -4,7 +4,8 @@ import base64, glob, hashlib, os, sys
 import gcsfs
 
 SET = os.environ.get("SFT_SET", "kisoku-sft-v2")  # v1 = preview set, v2 = final set (built on the Mac, uploaded with gsutil)
-REMOTE = f"kisoku-v2-training/sft/{SET}"
+BUCKET = os.environ["KISOKU_BUCKET"]
+REMOTE = f"{BUCKET}/sft/{SET}"
 BUILD = os.path.expanduser(f"~/sft-build/{SET}")
 LOCAL = os.path.expanduser(f"~/sft-data/{SET}")
 

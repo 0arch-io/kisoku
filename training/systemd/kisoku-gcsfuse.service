@@ -1,11 +1,13 @@
 [Unit]
-Description=gcsfuse read-only mount of gs://kisoku-v2-training
+Description=gcsfuse read-only mount of gs://${KISOKU_BUCKET}
 After=network-online.target
 
 [Service]
+# set KISOKU_BUCKET to your GCS bucket
+Environment=KISOKU_BUCKET=your-bucket-name
 Type=simple
 ExecStartPre=/bin/mkdir -p %h/gcsfuse
-ExecStart=/usr/bin/gcsfuse --foreground --key-file=%h/gcs-key.json --implicit-dirs -o ro kisoku-v2-training %h/gcsfuse
+ExecStart=/usr/bin/gcsfuse --foreground --key-file=%h/gcs-key.json --implicit-dirs -o ro ${KISOKU_BUCKET} %h/gcsfuse
 ExecStop=/bin/fusermount -u %h/gcsfuse
 Restart=on-failure
 RestartSec=15

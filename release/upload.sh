@@ -7,10 +7,11 @@
 #
 # Steps: (1) download from the bucket into STAGE (read-only gsutil cp), (2) patch configs and add cards,
 # (3) create private repos, (4) upload. Rows that are not ready are skipped with a note; see MANIFEST.md.
+: "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
 set -euo pipefail
 
 ORG="${ORG:-0arch-io}"
-BUCKET="${BUCKET:-gs://kisoku-v2-training}"
+BUCKET="${BUCKET:-gs://${KISOKU_BUCKET}}"
 STAGE="${STAGE:-$HOME/kisoku-release-staging}"
 REL="$(cd "$(dirname "$0")" && pwd)"          # this release/ directory (cards live here)
 HF="${HF:-hf}"                                # use HF=huggingface-cli on older installs

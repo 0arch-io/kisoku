@@ -2,11 +2,12 @@
 # Auto hand-off Phase A -> Phase B (2026-10-01, TRC grant already ended so the TPU may vanish any time: never idle).
 # Runs on every worker (systemd-run). Waits for Phase A to finish, worker 0 copies the final checkpoint to the
 # permanent path kisoku-run.sh expects for stage B, every worker then switches ~/kisoku-stage.env and starts training.
+: "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
 set -u
 export PATH="$HOME/.local/bin:/snap/bin:$PATH"
 LOG="$HOME/logs/next-stage.log"
 RUN_A=kisoku-v2-1b-longctx-a; STEP_A=2899
-FINAL_A="gs://kisoku-v2-training/runs/kisoku-v2-1b-longctx-a-final"
+FINAL_A="gs://${KISOKU_BUCKET}/runs/kisoku-v2-1b-longctx-a-final"
 FINAL_A_FUSE="$HOME/gcsfuse/runs/kisoku-v2-1b-longctx-a-final"
 W=$(hostname | grep -o 'w-[0-9]*$' | cut -d- -f2)
 echo "=== $(date -u) next-stage watcher started on worker $W ===" >> "$LOG"
@@ -19,7 +20,7 @@ echo "$(date -u) phase A done (ckpt $STEP_A present, trainer inactive)" >> "$LOG
 if [ "$W" = "0" ]; then
   export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="$HOME/gcs-key.json"
   if ! gcloud storage ls "$FINAL_A/commit_success.txt" >/dev/null 2>&1; then
-    gcloud storage cp -r "gs://kisoku-v2-training/runs/$RUN_A/checkpoints/$STEP_A/*" "$FINAL_A/" >> "$LOG" 2>&1
+    gcloud storage cp -r "gs://${KISOKU_BUCKET}/runs/$RUN_A/checkpoints/$STEP_A/*" "$FINAL_A/" >> "$LOG" 2>&1
     echo "$(date -u) copied $STEP_A -> $FINAL_A" >> "$LOG"
   fi
 fi

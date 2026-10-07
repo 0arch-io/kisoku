@@ -2,10 +2,11 @@
 # Batch 16 (2026-10-06, RTX 4090 under WSL): the released chat model (pass 9) on HumanEval (executes code, so it runs here, not on the
 # shared CTI box) and RULER with YaRN x2 at 4K, 32K and 64K, so the report's chat rows match the model that ships. Waits for batch 15a.
 # usage: pc-run-evals-16.sh ACCESS_TOKEN
+: "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
 export PATH=/usr/lib/wsl/lib:$HOME/ai/bin:$PATH HF_ALLOW_CODE_EVAL=1 TOKENIZERS_PARALLELISM=false
 R=~/kisoku-eval/results; M=~/kisoku-eval/models; LOG=~/logs/kisoku-eval-16.log; C9=$M/kisoku-1.6b-chat-sft009; C9Y=$M/kisoku-1.6b-chat-sft009-yarn2
 if [ ! -f $C9/model.safetensors ]; then mkdir -p $C9; for f in config.json generation_config.json tokenizer.json tokenizer_config.json special_tokens_map.json chat_template.jinja model.safetensors; do
-  curl -sf -H "Authorization: Bearer $1" -o $C9/$f "https://storage.googleapis.com/kisoku-v2-training/hf/kisoku-1.6b-chat-sft009/$f" || { echo "download failed: $f" >> $LOG; exit 1; }; done; fi
+  curl -sf -H "Authorization: Bearer $1" -o $C9/$f "https://storage.googleapis.com/${KISOKU_BUCKET}/hf/kisoku-1.6b-chat-sft009/$f" || { echo "download failed: $f" >> $LOG; exit 1; }; done; fi
 while tmux has-session -t kisoku-eval15a 2>/dev/null; do sleep 60; done
 echo "=== BATCH 16 (chat pass 9: HumanEval, RULER YaRN x2) START $(date -u)" >> $LOG
 run() { local name=$1 pre=$2 tasks=$3 fs=$4 bs=$5; shift 5

@@ -1,7 +1,8 @@
+# Replace KISOKU_BUCKET with your GCS bucket name and /home/USER with your home directory (the run scripts pass base_output_directory on the command line).
 # Kisoku v2 1B chat fine-tune (SFT). Model block is copied from ~/kisoku-v2-1b.yml and must stay identical.
 base_config: base.yml
 run_name: "kisoku-v2-1b-sft-001"
-base_output_directory: "gs://kisoku-v2-training/runs/"
+base_output_directory: "gs://KISOKU_BUCKET/runs/"
 
 # ---- model (identical to pretrain) ----
 base_emb_dim: 2048
@@ -28,7 +29,7 @@ tokenizer_path: "unsloth/Llama-3.2-1B"
 max_target_length: 8192  # the final set keeps examples up to 8192 tokens
 
 # ---- start from the final long-context (Phase C) weights, fresh optimizer, step 0 ----
-load_parameters_path: "gs://kisoku-v2-training/runs/kisoku-v2-1b-longctx-c-final/items"
+load_parameters_path: "gs://KISOKU_BUCKET/runs/kisoku-v2-1b-longctx-c-final/items"
 
 # ---- SFT data ----
 use_sft: True
@@ -39,9 +40,9 @@ packing: True
 chat_template: "{% for message in messages %}{% if message['bos'] %}{{ '<|begin_of_text|>' }}{% endif %}{{ '<|start_header_id|>' + ('tool' if message['tool'] else message['role']) + '<|end_header_id|>\n\n' + message['content'] | trim + '<|eot_id|>' }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
 dataset_type: hf
 hf_path: "parquet"
-hf_train_files: "/home/josephrodriguez/sft-data/kisoku-sft-v2/train-*.parquet"
+hf_train_files: "/home/USER/sft-data/kisoku-sft-v2/train-*.parquet"
 train_split: "train"
-hf_eval_files: "/home/josephrodriguez/sft-data/kisoku-sft-v2/eval-*.parquet"
+hf_eval_files: "/home/USER/sft-data/kisoku-sft-v2/eval-*.parquet"
 hf_eval_split: "train"
 train_data_columns: ["messages"]
 eval_data_columns: ["messages"]

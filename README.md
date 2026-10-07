@@ -14,15 +14,19 @@ Working repository for Kisoku 1.6B, a language model pretrained from scratch by 
 | `contamination/` | Verbatim-overlap audit: probe builder, shard scanner, summary, overlapping-versus-clean accuracy split |
 | `longctx-synth/` | Generator for the synthetic long-context tasks used in Phase C, and its manifest |
 
-## Status (2026-10-01)
+## Setup
 
-- Pretraining stages 1 to 3 done (about 0.5T tokens). Long-context Phase A (32K) done, Phase B (64K) running, Phase C (64K plus synthetic tasks) starts automatically after B.
+The scripts read the GCS bucket name from `KISOKU_BUCKET` (no `gs://` prefix): `export KISOKU_BUCKET=your-bucket`. The MaxText YAML files carry the literal `KISOKU_BUCKET` and `/home/USER`; the run scripts override those paths on the command line.
+
+## Status (2026-10-07)
+
+- Pretraining stages 1 to 3 done (about 0.5T tokens). Long-context Phases A (32K), B (64K) and C (64K plus synthetic tasks) done. Nine chat fine-tuning passes done; pass 9 is the preview.
 - Same-harness comparison against Llama 3.2 1B, Gemma 3 1B, SmolLM2 1.7B, Qwen2.5 1.5B on ten benchmarks: see `report/`.
 - Contamination audit over all pretraining shards done: see `contamination/summary.txt` and `split-accuracy.txt`.
 
 ## Before making this public
 
-- Remove or generalise storage bucket paths, project names, private IP addresses and host names in the scripts.
+- Bucket paths, private IP addresses and host names are generalised (2026-10-07: `KISOKU_BUCKET`, `KISOKU_PC_HOST`). Re-run the scan in `release/MANIFEST.md` section 3 before flipping the repo.
 - Confirm no credentials are present (none are committed; key files stay on the machines).
 - Do not publish any text from datasets whose licence forbids redistribution (the Nemotron sets). Only manifests and counts.
 - Replace placeholders in the report, add licence and citation sections.

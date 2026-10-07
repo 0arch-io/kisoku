@@ -1,6 +1,7 @@
 #!/bin/bash
 # Full scan, then summary + upload + power off (the VM bills while running).
-cd ~/contam; PY=~/.venv/bin/python; D=gs://kisoku-v2-training/eval/contamination-20261001
+: "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
+cd ~/contam; PY=~/.venv/bin/python; D=gs://${KISOKU_BUCKET}/eval/contamination-20261001
 PROCS=8 $PY scan.py > scan.log 2>&1
 PROCS=4 $PY scan.py >> scan.log 2>&1   # second pass retries anything that failed (finished shards are skipped)
 $PY summarize.py > summary.txt 2>&1

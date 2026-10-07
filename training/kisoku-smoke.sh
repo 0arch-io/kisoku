@@ -1,6 +1,7 @@
 #!/bin/bash
 # Long-context memory smoke test (synthetic data, no checkpoints).
 # Usage: kisoku-smoke.sh NAME LEN GA VOCAB_TILING [extra overrides...]
+: "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
 set -u
 NAME=$1; LEN=$2; GA=$3; VT=$4; shift 4
 rm -f /tmp/libtpu_lockfile
@@ -12,7 +13,7 @@ LOG="$HOME/logs/smoke-$NAME.log"
 echo "=== SMOKE START $(date -u) $NAME len=$LEN ga=$GA vt=$VT $* on $(hostname) ===" >> "$LOG"
 exec .venv/bin/python -u -m maxtext.trainers.pre_train.train "$HOME/kisoku-v2-1b.yml" \
   run_name="smoke-$NAME" \
-  base_output_directory=gs://kisoku-v2-training/smoke/ \
+  base_output_directory=gs://${KISOKU_BUCKET}/smoke/ \
   dataset_type=synthetic \
   ici_fsdp_parallelism=16 \
   per_device_batch_size=1 \

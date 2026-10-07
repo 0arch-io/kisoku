@@ -1,6 +1,7 @@
 #!/bin/bash
 # Adds stage C (64K + synthetic long-context tasks) to kisoku-run.sh and installs the B -> C hand-off watcher.
 # Safe while Phase B trains: kisoku-run.sh exec's python, and the file is replaced atomically after bash -n.
+: "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
 set -u
 W=$(hostname | grep -o 'w-[0-9]*$' | cut -d- -f2)
 cd ~/bin || exit 1
@@ -13,7 +14,7 @@ def ins(anchor, new, after=True):
     assert s.count(anchor)==1, anchor
     s=s.replace(anchor, anchor+new if after else new+anchor)
 ins('LPG="$D/longctx-pg19/*.arrayrecord"\n', '# Synthetic long-context tasks (2026-10-01): 22,386 docs, avg 25,709 tokens, all <= 60K tokens (questions never split from their document).\nLSYN="$D/longctx-synth-tasks/*.arrayrecord"\n')
-ins('PHASE_A_FINAL="gs://kisoku-v2-training/runs/kisoku-v2-1b-longctx-a-final/items"\n', '''PHASE_B_FINAL="gs://kisoku-v2-training/runs/kisoku-v2-1b-longctx-b-final/items"
+ins('PHASE_A_FINAL="gs://${KISOKU_BUCKET}/runs/kisoku-v2-1b-longctx-a-final/items"\n', '''PHASE_B_FINAL="gs://${KISOKU_BUCKET}/runs/kisoku-v2-1b-longctx-b-final/items"
 # Phase C mix. Token shares: short 0.40, code 0.15, science 0.15, pg19 0.12, synthetic tasks 0.18 -> document weights
 # (share / avg tokens per doc, normalised). Short part = stage-3 weights x 0.9177. Synthetic source appended LAST.
 CMIX="$NEM,0.2478;$UFW,0.2570;$SC,0.2019;$FM,0.0459;$OWM,0.0275;$MWP,0.0459;$OT,0.01101;$NCM,0.1285;$LCODE,0.005531;$LSCI,0.009309;$LPG,0.002836;$LSYN,0.016898"
@@ -38,7 +39,7 @@ set -u
 export PATH="$HOME/.local/bin:/snap/bin:$PATH"
 LOG="$HOME/logs/next-stage.log"
 RUN_B=kisoku-v2-1b-longctx-b; STEP_B=2859
-FINAL_B="gs://kisoku-v2-training/runs/kisoku-v2-1b-longctx-b-final"
+FINAL_B="gs://${KISOKU_BUCKET}/runs/kisoku-v2-1b-longctx-b-final"
 FINAL_B_FUSE="$HOME/gcsfuse/runs/kisoku-v2-1b-longctx-b-final"
 W=$(hostname | grep -o 'w-[0-9]*$' | cut -d- -f2)
 echo "=== $(date -u) next-stage-c watcher started on worker $W ===" >> "$LOG"
@@ -47,7 +48,7 @@ echo "$(date -u) phase B done (ckpt $STEP_B present, trainer inactive)" >> "$LOG
 if [ "$W" = "0" ]; then
   export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="$HOME/gcs-key.json"
   if ! gcloud storage ls "$FINAL_B/commit_success.txt" >/dev/null 2>&1; then
-    gcloud storage cp -r "gs://kisoku-v2-training/runs/$RUN_B/checkpoints/$STEP_B/*" "$FINAL_B/" >> "$LOG" 2>&1
+    gcloud storage cp -r "gs://${KISOKU_BUCKET}/runs/$RUN_B/checkpoints/$STEP_B/*" "$FINAL_B/" >> "$LOG" 2>&1
     echo "$(date -u) copied $STEP_B -> $FINAL_B" >> "$LOG"
   fi
 fi

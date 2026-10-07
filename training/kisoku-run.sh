@@ -1,6 +1,7 @@
 #!/bin/bash
 # Kisoku v2 training entrypoint. Stage/run/steps come from ~/kisoku-stage.env so
 # moving to the next stage is an edit of that file plus a service restart.
+: "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
 set -u
 export PATH="$HOME/.local/bin:$PATH"
 source "$HOME/kisoku-stage.env"
@@ -27,9 +28,9 @@ LSYN="$D/longctx-synth-tasks/*.arrayrecord"
 # Token shares: short 0.40, code 0.20, science 0.22, pg19 0.18 -> doc weights below.
 # Short part = stage-3 weights scaled by 0.9263 (sum 0.9745); long appended LAST.
 LONGMIX="$NEM,0.250;$UFW,0.259;$SC,0.204;$FM,0.046;$OWM,0.028;$MWP,0.046;$OT,0.0111;$NCM,0.130;$LCODE,0.00744;$LSCI,0.01378;$LPG,0.00429"
-STAGE3_FINAL="gs://kisoku-v2-training/runs/kisoku-v2-1b-stage3-final/242999/items"
-PHASE_A_FINAL="gs://kisoku-v2-training/runs/kisoku-v2-1b-longctx-a-final/items"
-PHASE_B_FINAL="gs://kisoku-v2-training/runs/kisoku-v2-1b-longctx-b-final/items"
+STAGE3_FINAL="gs://${KISOKU_BUCKET}/runs/kisoku-v2-1b-stage3-final/242999/items"
+PHASE_A_FINAL="gs://${KISOKU_BUCKET}/runs/kisoku-v2-1b-longctx-a-final/items"
+PHASE_B_FINAL="gs://${KISOKU_BUCKET}/runs/kisoku-v2-1b-longctx-b-final/items"
 # Phase C mix. Token shares: short 0.40, code 0.15, science 0.15, pg19 0.12, synthetic tasks 0.18 -> document weights
 # (share / avg tokens per doc, normalised). Short part = stage-3 weights x 0.9177. Synthetic source appended LAST.
 CMIX="$NEM,0.2478;$UFW,0.2570;$SC,0.2019;$FM,0.0459;$OWM,0.0275;$MWP,0.0459;$OT,0.01101;$NCM,0.1285;$LCODE,0.005531;$LSCI,0.009309;$LPG,0.002836;$LSYN,0.016898"
@@ -100,7 +101,7 @@ export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 echo "=== START $(date -u) stage=$STAGE run=$RUN steps=$STEPS on $(hostname) ===" >> "$HOME/logs/$RUN.log"
 exec .venv/bin/python -u -m maxtext.trainers.pre_train.train "$HOME/kisoku-v2-1b.yml" \
   run_name="$RUN" \
-  base_output_directory=gs://kisoku-v2-training/runs/ \
+  base_output_directory=gs://${KISOKU_BUCKET}/runs/ \
   ici_fsdp_parallelism=16 \
   per_device_batch_size=$PDBS \
   gradient_accumulation_steps=$GA \

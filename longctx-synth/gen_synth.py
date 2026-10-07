@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.expanduser('~/maxtext-tools/src'))
 from maxtext.input_pipeline.protos import example_pb2, feature_pb2
 from array_record.python.array_record_module import ArrayRecordReader, ArrayRecordWriter
 
-BUCKET = 'gs://kisoku-v2-training/datasets'
+BUCKET = 'gs://' + os.environ['KISOKU_BUCKET'] + '/datasets'
 WORK = os.path.expanduser('~/synth'); SRC = f'{WORK}/src'; OUT = f'{WORK}/out'
 MAX_TOK = 60000
 LENGTHS = [(8000, 0.15), (16000, 0.20), (32000, 0.30), (56000, 0.35)]

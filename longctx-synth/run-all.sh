@@ -1,5 +1,6 @@
 #!/bin/bash
-cd ~/synth; PY=~/.venv/bin/python; D=gs://kisoku-v2-training/datasets/longctx-synth-tasks
+: "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
+cd ~/synth; PY=~/.venv/bin/python; D=gs://${KISOKU_BUCKET}/datasets/longctx-synth-tasks
 rm -rf out src; $PY gen_synth.py > gen.log 2>&1
 $PY - > manifest.txt 2>&1 <<'PY'
 import json,glob,os,collections
