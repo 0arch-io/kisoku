@@ -184,7 +184,7 @@ One detail on this table: it uses per-sample accuracy (plain accuracy, not the l
 
 **Status.** Long-context training is finished: Phase A (32K), Phase B (64K, 2,860 steps) and Phase C (64K with 18 percent synthetic long-context tasks, 1,300 steps, final loss 1.764). The RULER results below are for the final checkpoint. The earlier Phase A numbers (step 2500 of 2,900, trained to 32K) are kept only as the "before" row. There are no confidence intervals yet, and the 10-benchmark suite has not been rerun on this checkpoint.
 
-**Recipe.** Extend in stages: 4K to 32K (Phase A), then 64K (Phase B), then 64K with synthetic aggregation tasks (Phase C), each stage loading the previous final parameters with a fresh optimizer. Keep the RoPE base at 5M. Mix about 60% long and 40% short documents, with long data from code repositories, science PDFs and books. Disable document truncation so long documents are split, not cut. Then apply YaRN with factor 2 at inference to reach about 128K. The design draws on the open recipes I studied: SmolLM3 (YaRN for the last doubling), ProLong (60/40 long/short mix; short-only SFT is safe), and Olmo 3 (science PDFs plus synthetic aggregation tasks in the long mix; arXiv 2512.13961). [TBD: formal citations for SmolLM3 and ProLong.]
+**Recipe.** Extend in stages: 4K to 32K (Phase A), then 64K (Phase B), then 64K with synthetic aggregation tasks (Phase C), each stage loading the previous final parameters with a fresh optimizer. Keep the RoPE base at 5M. Mix about 60% long and 40% short documents, with long data from code repositories, science PDFs and books. Disable document truncation so long documents are split, not cut. Then apply YaRN with factor 2 at inference to reach about 128K. The design draws on the open recipes I studied: SmolLM3 (YaRN for the last doubling), ProLong (60/40 long/short mix; short-only SFT is safe), and Olmo 3 (science PDFs plus synthetic aggregation tasks in the long mix; arXiv 2512.13961). References: SmolLM3 [1], ProLong [2], Olmo 3 [3], YaRN [4].
 
 **Synthetic task design.** Phase C includes 18% synthetic documents. I wrote my own generator; its templates are my own and are not RULER's. It takes a science PDF or a PG19 book, trims it to a target length (8K, 16K, 32K or 56K tokens, with weights 15/20/30/35%, never above 60K so a 64K chunk never separates the questions from the document), plants lines in it, and appends 8 to 24 question-answer pairs whose answers are computed exactly from the final text:
 
@@ -415,7 +415,7 @@ This section is long on purpose. Each item cost time, and most are the kind of t
 
 ## 9. Cost and compute
 
-**TPU.** A TPU v4-32 from Google's TRC, free of charge. The grant period formally ended (my notes give 2026-08-11 for the original grant, and a renewal was declined for capacity), and the TPU kept running because it had never been reclaimed. From 2026-10-01 I treated it as revocable at any moment: all state is backed up in cloud storage, and the long-context phases were planned so that Phase B is the last essential use of the TPU. The five chat fine-tuning passes (section 7B) also ran on it. [TBD: total TPU hours or chip-hours used.]
+**TPU.** A TPU v4-32 from Google's TRC, free of charge. The grant period formally ended (my notes give 2026-08-11 for the original grant, and a renewal was declined for capacity), and the TPU kept running because it had never been reclaimed. From 2026-10-01 I treated it as revocable at any moment: all state is backed up in cloud storage, and the long-context phases were planned so that Phase B is the last essential use of the TPU. The five chat fine-tuning passes (section 7B) also ran on it. Step time alone adds up to about 1,030 TPU hours on the 16-chip slice (stage 1 199,000 steps at 13.3 s, about 735 h; stage 2 25,000 at 14.9 s, 103 h; stage 3 19,000 at about 13.5 s, 71 h; Phase A 31 h; Phase B 52 h; Phase C 24 h; nine chat passes about 13 h), or about 16,500 chip-hours. Restarts, evaluation and idle time on top of that were not metered.
 
 **Cloud storage.** The grant covers TPU time only. The ongoing cost of the project was cloud storage and read operations: about $85 to $100 per month in total, of which my notes itemize about $44 per month of read operations from streaming data through gcsfuse and about $16 per month for about 787 GB stored. This was flat per day, not growing.
 
@@ -463,7 +463,24 @@ All links are placeholders until release. An earlier preview chat model (a super
 
 ## 13. Acknowledgements
 
-This work was made possible by Google's TPU Research Cloud, which provided the TPU v4-32 that all pretraining ran on. I also thank the authors of MaxText, lm-evaluation-harness, and the open datasets and recipes this work builds on (Nemotron-CC, Ultra-FineWeb, StarCoder, FineMath, OpenWebMath, MegaMath, OpenThoughts3, Dolma 3, ProLong, PG19, SmolLM3 and Olmo 3). [TBD: formal citations.]
+This work was made possible by Google's TPU Research Cloud, which provided the TPU v4-32 that all pretraining ran on. I also thank the authors of MaxText, lm-evaluation-harness, and the open datasets and recipes this work builds on (Nemotron-CC [5], Ultra-FineWeb [6], StarCoder [7], FineMath, OpenWebMath [8], MegaMath [9], OpenThoughts [10], Dolma 3 and Olmo 3 [3], ProLong [2], PG-19 [11], SmolLM3 [1]), RULER [12], the Muon optimizer [13], MaxText and lm-evaluation-harness [14].
+
+## References
+
+1. Hugging Face, "SmolLM3: smol, multilingual, long-context reasoner", blog post and training recipe, July 2025. https://huggingface.co/blog/smollm3
+2. T. Gao, A. Wettig, H. Yen, D. Chen, "How to Train Long-Context Language Models (Effectively)", arXiv:2410.02660, 2024.
+3. Ai2, "Olmo 3", arXiv:2512.13961, 2025.
+4. B. Peng, J. Quesnelle, H. Fan, E. Shippole, "YaRN: Efficient Context Window Extension of Large Language Models", ICLR 2024, arXiv:2309.00071.
+5. D. Su et al., "Nemotron-CC: Transforming Common Crawl into a Refined Long-Horizon Pretraining Dataset", arXiv:2412.02595, 2024.
+6. Y. Wang et al., "Ultra-FineWeb: Efficient Data Filtering and Verification for High-Quality LLM Training Data", arXiv:2505.05427, 2025.
+7. R. Li et al., "StarCoder: may the source be with you!", arXiv:2305.06161, 2023.
+8. K. Paster, M. Dos Santos, Z. Azerbayev, J. Ba, "OpenWebMath: An Open Dataset of High-Quality Mathematical Web Text", arXiv:2310.06786, 2023.
+9. F. Zhou et al., "MegaMath: Pushing the Limits of Open Math Corpora", arXiv:2504.02807, 2025.
+10. E. Guha et al., "OpenThoughts: Data Recipes for Reasoning Models", arXiv:2506.04178, 2025.
+11. J. W. Rae et al., "Compressive Transformers for Long-Range Sequence Modelling", arXiv:1911.05507, 2019 (the PG-19 dataset).
+12. C.-P. Hsieh et al., "RULER: What's the Real Context Size of Your Long-Context Language Models?", arXiv:2404.06654, 2024.
+13. J. Liu et al., "Muon is Scalable for LLM Training", arXiv:2502.16982, 2025; K. Jordan et al., "Muon: An optimizer for hidden layers in neural networks", 2024.
+14. Google, MaxText, https://github.com/AI-Hypercomputer/maxtext; L. Gao et al., "A framework for few-shot language model evaluation" (lm-evaluation-harness), Zenodo, 2023.
 
 ## 14. Open items
 
