@@ -31,9 +31,14 @@ fetch() { # fetch <bucket subpath> <local dir>
 fetch hf/kisoku-1.6b-base-longC-1299 base-main
 fetch hf/kisoku-1.6b-base-s1-198999  base-stage1
 fetch hf/kisoku-1.6b-base-s3-242999  base-stage3
-fetch hf/kisoku-1.6b-base-longA-2500 base-longA2500
+fetch hf/kisoku-1.6b-base-longA-2899 base-longA
+fetch hf/kisoku-1.6b-base-longB-2859 base-longB
 fetch hf/kisoku-1.6b-chat-sft009     chat-main
-fetch hf/gguf-kisoku-1.6b-chat-sft009 gguf   # F16 only today; Q8_0 / Q4_K_M and base GGUF do not exist yet
+fetch hf/gguf-kisoku-1.6b-chat-sft009 gguf
+fetch hf/gguf-kisoku-1.6b-base-longC-1299 gguf
+fetch hf/kisoku-1.6b-chat-sft005 chat-sft005
+fetch hf/kisoku-1.6b-chat-sft006 chat-sft006
+fetch hf/kisoku-1.6b-chat-dpo38 chat-dpo38
 
 # ---------- 2. patch configs, add cards ----------
 # The exported config.json has rope_scaling null. Ship YaRN x2 over the 64K training length (DECISION in MANIFEST.md).
@@ -57,7 +62,6 @@ patch_yarn chat-main
 run cp "$REL/kisoku-1.6b/README.md"      "$STAGE/base-main/README.md"
 run cp "$REL/kisoku-1.6b-chat/README.md" "$STAGE/chat-main/README.md"
 run cp "$REL/kisoku-1.6b-gguf/README.md" "$STAGE/gguf/README.md"
-note "Before RUN=1: build Q8_0 / Q4_K_M and base GGUFs (MANIFEST rows 10 and 11), set the licence, resolve every [CHECK] in the cards."
 note "Verify the patched config loads: python -c 'from transformers import AutoConfig; print(AutoConfig.from_pretrained(\"$STAGE/base-main\").rope_scaling)'"
 
 # ---------- 3. create private repos ----------
@@ -71,16 +75,19 @@ run "$HF" upload "$ORG/kisoku-1.6b-chat" "$STAGE/chat-main" . --repo-type model 
 run "$HF" upload "$ORG/kisoku-1.6b-gguf" "$STAGE/gguf" . --repo-type model --include "*.gguf" "README.md" --commit-message "GGUF builds"
 
 # Per-stage checkpoints as branches of the base repo (DECISION: confirm which to publish; stage 2 is missing).
-branch() { # branch <branch name> <local dir>
-  run python3 -c "from huggingface_hub import HfApi; HfApi().create_branch('$ORG/kisoku-1.6b', branch='$1', exist_ok=True)"
-  run "$HF" upload "$ORG/kisoku-1.6b" "$STAGE/$2" . --repo-type model --revision "$1" --commit-message "checkpoint $1"
+HFPY="${HFPY:-$(head -1 "$(command -v "$HF")" | sed 's/^#!//')}"   # the python that has huggingface_hub (the hf CLI's own)
+branch() { # branch <repo> <branch name> <local dir>
+  run "$HFPY" -c "from huggingface_hub import HfApi; HfApi().create_branch('$ORG/$1', branch='$2', exist_ok=True)"
+  run "$HF" upload "$ORG/$1" "$STAGE/$3" . --repo-type model --revision "$2" --commit-message "checkpoint $2"
 }
-branch stage1-step198999   base-stage1
-branch stage3-step242999   base-stage3
-branch long-phaseA-step2500 base-longA2500
-# branch long-phaseB-step2859 base-longB    # needs conversion from runs/kisoku-v2-1b-longctx-b-final/2859 first
-# branch stage2-step223999    base-stage2   # MISSING: no stage 2 checkpoint in the bucket
-
-# Chat pass branches (DECISION), same pattern against $ORG/kisoku-1.6b-chat, e.g. sft005, sft006, dpo38.
+branch kisoku-1.6b stage1-step198999    base-stage1
+branch kisoku-1.6b stage3-step242999    base-stage3
+branch kisoku-1.6b long-phaseA-step2899 base-longA
+branch kisoku-1.6b long-phaseB-step2859 base-longB
+# stage2-step223999: MISSING, no stage 2 checkpoint in the bucket (report section 12 says so)
+# Chat passes the report compares (decided 2026-10-07: 5, 6 and the preference-tuned pass)
+branch kisoku-1.6b-chat sft005 chat-sft005
+branch kisoku-1.6b-chat sft006 chat-sft006
+branch kisoku-1.6b-chat dpo38  chat-dpo38
 
 note "Done. Repos are private. Make public by hand after review: $HF repo settings, or the web UI."

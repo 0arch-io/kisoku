@@ -22,16 +22,16 @@ GGUF builds of [Kisoku 1.6B (base)](https://huggingface.co/0arch-io/kisoku-1.6b)
 
 | File | Model | Quantization | Approx size |
 |---|---|---|---|
-| `kisoku-1.6b-base-F16.gguf` | base (final, Phase C) | F16 | 3.2 GB |
-| `kisoku-1.6b-base-Q8_0.gguf` | base | Q8_0 | about 1.7 GB |
-| `kisoku-1.6b-base-Q4_K_M.gguf` | base | Q4_K_M | about 1 GB |
-| `kisoku-1.6b-chat-sft009-F16.gguf` | chat (pass 9) | F16 | 3.2 GB (3,209,526,912 bytes) |
-| `kisoku-1.6b-chat-sft009-Q8_0.gguf` | chat (pass 9) | Q8_0 | about 1.7 GB |
-| `kisoku-1.6b-chat-sft009-Q4_K_M.gguf` | chat (pass 9) | Q4_K_M | about 1 GB |
+| `kisoku-1.6b-base-longC-1299-F16.gguf` | base (final, Phase C step 1299) | F16 | 3.21 GB |
+| `kisoku-1.6b-base-longC-1299-Q8_0.gguf` | base | Q8_0 | 1.71 GB |
+| `kisoku-1.6b-base-longC-1299-Q4_K_M.gguf` | base | Q4_K_M | 1.02 GB |
+| `kisoku-1.6b-chat-sft009-F16.gguf` | chat (pass 9) | F16 | 3.21 GB |
+| `kisoku-1.6b-chat-sft009-Q8_0.gguf` | chat (pass 9) | Q8_0 | 1.71 GB |
+| `kisoku-1.6b-chat-sft009-Q4_K_M.gguf` | chat (pass 9) | Q4_K_M | 1.02 GB |
 
-[CHECK] File names and sizes of the Q8_0, Q4_K_M and base files are expected, not confirmed: only `kisoku-1.6b-chat-sft009-F16.gguf` exists in the bucket today. The build script (`training/build-gguf-chat.sh`) produces F16, Q8_0 and Q4_K_M with the same naming. Quantized sizes are estimates. Rename or re-convert before upload as decided in MANIFEST.md.
+F16 files were converted with llama.cpp's `convert_hf_to_gguf.py`; the quantized files with `llama-quantize`. The Q8_0 files were smoke-tested with `llama-server` (the base completes a factual prompt, the chat model follows its template).
 
-Quantization costs some quality. I have not measured how much for Kisoku. [CHECK] If Q4_K_M scores matter, run a quick check before claiming anything.
+Quantization costs some quality. I have not measured how much for Kisoku. I did not measure it; if Q4_K_M quality matters to you, run the harness on the quantized file.
 
 ## llama.cpp
 
@@ -48,7 +48,7 @@ llama-cli -m kisoku-1.6b-base-Q8_0.gguf -p "The three main causes of the French 
 
 Keep the repetition penalty at 1.0 (off). It hurt every generation score in my tests. The chat template is read from the GGUF metadata (Llama 3 style, `<|eot_id|>` ends a turn).
 
-Context: the GGUF stores the plain RoPE config (theta 5,000,000, trained to 64K). For YaRN x2 beyond 64K, add llama.cpp's YaRN flags, for example `-c 131072 --rope-scaling yarn --rope-scale 2 --yarn-orig-ctx 65536`. [CHECK] I have not tested these flags against the RULER numbers, which were measured with the HF YaRN config. Plain config is the safer default up to 32K. YaRN trades about 1.3 points at 32K for a large gain at 64K.
+Context: the GGUF stores the plain RoPE config (theta 5,000,000, trained to 64K). For YaRN x2 beyond 64K, add llama.cpp's YaRN flags, for example `-c 131072 --rope-scaling yarn --rope-scale 2 --yarn-orig-ctx 65536`. I have not verified that these flags reproduce the RULER numbers, which were measured with the Hugging Face YaRN config. Plain config is the safer default up to 32K. YaRN trades about 1.3 points at 32K for a large gain at 64K.
 
 ## Ollama
 
@@ -78,7 +78,7 @@ ollama create kisoku-chat -f Modelfile
 ollama run kisoku-chat
 ```
 
-[CHECK] This Modelfile is the one from the earlier preview model with one deliberate change: no `repeat_penalty 1.1` (the old file had it, and the report shows a repetition penalty hurts), and `num_ctx` raised from 4096 to 8192. The template prints every message including the system one, and the model was trained with a leading BOS token that llama.cpp adds from the GGUF. Test a multi-turn chat in Ollama before publishing.
+This Modelfile is the earlier preview model's with two changes: no `repeat_penalty` (a repetition penalty hurt every Kisoku generation score in my tests) and `num_ctx` raised from 4096 to 8192. The template prints every message including the system one; the leading BOS token comes from the GGUF. Tested 2026-10-07 with a two-turn chat in Ollama 0.x on the Q8_0 file: the template and stop tokens work (the answer it gave about Canberra's population was wrong, which is the confident-wrong-answer failure on the chat card).
 
 For the base model, a plain completion Modelfile works: `FROM ./kisoku-1.6b-base-Q8_0.gguf`, `TEMPLATE "{{ .Prompt }}"`, `PARAMETER temperature 0.7`.
 

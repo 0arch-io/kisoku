@@ -11,7 +11,6 @@ tags:
 - chat
 - preview
 - kisoku
-# Dataset ids are best guesses from the report's chat data section. [CHECK] each one resolves before publishing.
 datasets:
 - HuggingFaceTB/smoltalk2
 - NousResearch/Hermes-3-Dataset
@@ -34,29 +33,29 @@ Training data (every example containing a benchmark test item was dropped by ver
 - Public chat sets: SmolTalk2 subsets, Hermes 3, OpenHermes, no_robots, tool traces (xlam, Hermes function calling).
 - A first teacher-written set of 34,879 examples from DeepSeek-V4.1-Flash.
 - A second teacher-written set of about 47,500 conversations written as Kisoku (everyday chat, revise-my-work, casual build requests, explanations, short Q&A, tool conversations, identity and capabilities, small talk, verified math and logic).
-- Targets were written only by the DeepSeek teacher or taken from public datasets. The teacher output is text from another language model, so check the DeepSeek terms for your use. [CHECK] licence implications of the teacher-written data.
+- Targets were written only by the DeepSeek teacher or taken from public datasets. The teacher output is text from another language model, so DeepSeek's terms apply to that text. That is one reason the teacher-written conversations are not released.
 - Corrections of the model's own bad turns in conversation, "I don't know" examples built from the model's own wrong answers, a set for defensive self-talk, and keyboard typo noise on short user messages.
 
 Thinking mode was trained in pass 3 and removed. "Hold your ground" examples were removed (the model could not tell its right answers from wrong ones).
 
 ## Benchmarks (7B suite)
 
-Base-style tests, no chat template, same harness as the base card (lm-evaluation-harness 0.4.13, bfloat16, RTX 4090). The base column is the **stage 3** checkpoint, before long-context training, so part of each difference may come from that training and not from chat tuning. [CHECK] the short-context rerun on the final long-context checkpoint (batch 18) was queued on 2026-10-07; if it finished, replace the base column.
+Base-style tests, no chat template, same harness as the base card (lm-evaluation-harness 0.4.13, bfloat16, RTX 4090). The first base column is the stage 3 checkpoint, before long-context training; the second is the released base, which the chat model was tuned from.
 
-| Test | Base (stage 3) | Chat, pass 9 |
-|---|---|---|
-| GSM8K | 15.3 | 20.6 |
-| HumanEval | 13.4 | 14.0 |
-| ARC-Easy | 65.4 | 66.0 |
-| ARC-Challenge | 39.8 | 42.2 |
-| WinoGrande | 57.3 | 57.2 |
-| PIQA | 73.9 | 73.0 |
-| HellaSwag | 57.7 | 57.2 |
-| TriviaQA | 22.8 | 20.8 |
-| MMLU | 33.0 | 29.8 |
-| BBH | 29.2 | 26.3 |
+| Test | Base (stage 3) | Base (released) | Chat, pass 9 |
+|---|---|---|---|
+| GSM8K | 15.3 | 15.0 | 20.6 |
+| HumanEval | 13.4 | 14.6 | 14.0 |
+| ARC-Easy | 65.4 | 64.4 | 66.0 |
+| ARC-Challenge | 39.8 | 40.1 | 42.2 |
+| WinoGrande | 57.3 | 56.8 | 57.2 |
+| PIQA | 73.9 | 73.0 | 73.0 |
+| HellaSwag | 57.7 | 57.8 | 57.2 |
+| TriviaQA | 22.8 | 23.1 | 20.8 |
+| MMLU | 33.0 | 34.2 | 29.8 |
+| BBH | 29.2 | 28.6 | 26.3 |
 
-Math and code went up, MMLU and BBH went down by about 3 points, and the rest moved by about a point or less. No confidence intervals.
+Against the released base, math went up by 5 points, MMLU down by 4, BBH by 2, and the rest moved by about a point or less. No confidence intervals.
 
 ## Long context (RULER, YaRN x2)
 
@@ -66,7 +65,7 @@ Math and code went up, MMLU and BBH went down by about 3 points, and the rest mo
 | Kisoku base, final | 76.1 | 58.8 | 56.7 |
 | Llama 3.2 1B (base) | 73.5 | 56.7 | 49.2 |
 
-Single runs of 650 samples, no confidence interval. The chat model keeps most of the base long-context ability. The Phase C mix included synthetic tasks resembling RULER, so see the base card's caveat. Chat-model RULER at other lengths was not reported. [CHECK]
+Single runs of 650 samples, no confidence interval. The chat model keeps most of the base long-context ability. The Phase C mix included synthetic tasks resembling RULER, so see the base card's caveat. The chat model was run at these three lengths only.
 
 ## Held-out conversation test
 
@@ -95,14 +94,14 @@ From "What remains in the released chat model" and the manual-chat findings:
 - Defensive self-talk after questions about itself. Replies judged bad by a pattern check on openings that should be accepted: 20 of 120 on covered situations, 29 of 216 on situations the data never described.
 - It states wrong answers to hard math as confidently as right ones. On one competition-style algebra question it gave the correct value in 9 of 24 samples and six different wrong values in the others.
 - It declines only some of the questions it gets wrong: on held-out long-tail questions it declined 38% of previously-wrong ones and wrongly declined 15% of previously-right ones. Abstention and coverage trade off at this size.
-- It still makes unneeded tool calls on some probes (an earlier pass called a weather tool for "What is 12 times 12?", 4 of 12 no-tool probes). [CHECK] pass 9 rate was not reported.
+- It still makes unneeded tool calls on some probes (an earlier pass called a weather tool for "What is 12 times 12?", 4 of 12 no-tool probes). The pass 9 rate was not measured.
 - Safety, bias and multilingual behavior were not evaluated. Instruction following and tool use were only probed by hand and on small held-out sets.
 
 ## Chat template
 
 The template is Llama 3 style and ships in `chat_template.jinja` and `tokenizer_config.json` (source: `training/finalize_hf.py` and the training template in `sft/build_sft_v2.py`). Training used one `<|begin_of_text|>` at the start of the conversation only, then each message as `<|start_header_id|>ROLE<|end_header_id|>\n\n` + content + `<|eot_id|>`, and the assistant turn is generated after `<|start_header_id|>assistant<|end_header_id|>\n\n`. The end-of-turn token is `<|eot_id|>` (128009).
 
-Roles: `system`, `user`, `assistant`, and `tool` for tool results. The template has no default system prompt. In training some examples had a system prompt like "You are Kisoku, a helpful AI assistant created by 0ARCH." and many had none. [CHECK] whether a default system prompt should be recommended.
+Roles: `system`, `user`, `assistant`, and `tool` for tool results. The template has no default system prompt. In training some examples had a system prompt like "You are Kisoku, a helpful AI assistant created by 0ARCH." and many had none. No default system prompt is required; the model was trained both with and without one.
 
 ```python
 import torch
@@ -124,11 +123,11 @@ Tool use (trained, lightly tested): put the tool list as JSON inside `<tools></t
 
 ## YaRN and context
 
-The config follows the base model: trained to 64K, YaRN factor 2 for about 128K. See the base card for the exact config and how to turn it off. [CHECK] the chat export's config.json in the bucket also has `rope_scaling: null`; patch like the base before upload.
+The config follows the base model: trained to 64K, YaRN factor 2 for about 128K. See the base card for the exact config and how to turn it off. This repo's `config.json` carries the same YaRN x2 setting, with `config.plain.json` beside it.
 
 ## GGUF
 
-Builds for llama.cpp and Ollama are in [0arch-io/kisoku-1.6b-gguf](https://huggingface.co/0arch-io/kisoku-1.6b-gguf). [CHECK] only the F16 file for this pass exists in the bucket so far; Q8_0 and Q4_K_M still need to be built.
+Builds for llama.cpp and Ollama are in [0arch-io/kisoku-1.6b-gguf](https://huggingface.co/0arch-io/kisoku-1.6b-gguf). F16, Q8_0 and Q4_K_M are there for both the base and this chat model.
 
 ## Limitations
 

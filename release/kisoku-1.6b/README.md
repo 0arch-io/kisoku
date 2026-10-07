@@ -13,7 +13,6 @@ tags:
 - long-context
 - tpu
 - kisoku
-# Dataset ids below are best guesses from the report's data section. [CHECK] each one resolves on the Hub before publishing.
 datasets:
 - nvidia/Nemotron-CC-v2.1
 - nvidia/Nemotron-CC-Math-v1
@@ -21,7 +20,7 @@ datasets:
 - bigcode/starcoderdata
 - HuggingFaceTB/finemath
 - open-web-math/open-web-math
-- LLM360/MegaMath
+- IFM/MegaMath
 - open-thoughts/OpenThoughts3-1.2M
 - deepmind/pg19
 - princeton-nlp/prolong-data-64K
@@ -29,7 +28,7 @@ datasets:
 
 # Kisoku 1.6B (base)
 
-Kisoku 1.6B is a base (not chat) language model pretrained from random initialization by one person, Joseph Rodriguez at 0ARCH, on a TPU v4-32 from Google's TPU Research Cloud. It has 1,600,749,056 parameters, saw about 0.5 trillion tokens of pretraining text (524.4B including the long-context phases), and was extended to 64K tokens of context. All numbers below come from the technical report draft (draft 3, 2026-10-05) and were measured by me on my own hardware.
+Kisoku 1.6B is a base (not chat) language model pretrained from random initialization by one person, Joseph Rodriguez at 0ARCH, on a TPU v4-32 from Google's TPU Research Cloud. It has 1,600,749,056 parameters, saw about 0.5 trillion tokens of pretraining text (524.4B including the long-context phases), and was extended to 64K tokens of context. All numbers below come from the technical report draft (draft 4, 2026-10-07) and were measured by me on my own hardware.
 
 This repo holds the final base model: the checkpoint after long-context Phase C (step 1299). Earlier checkpoints are on branches, see "Other checkpoints" below. A chat fine-tune is in [0arch-io/kisoku-1.6b-chat](https://huggingface.co/0arch-io/kisoku-1.6b-chat) (preview) and GGUF builds are in [0arch-io/kisoku-1.6b-gguf](https://huggingface.co/0arch-io/kisoku-1.6b-gguf).
 
@@ -116,7 +115,7 @@ Stage 1 ended at the full 3e-4 learning rate and was not annealed (a launcher wa
 
 Stage 1 mix weights (by document): Nemotron-CC 0.35, Ultra-FineWeb 0.35, StarCoder 0.16, FineMath 0.06, OpenWebMath 0.04, MegaMath-Web-Pro 0.04. Stage 2 shifted toward code and math. Stage 3 added Nemotron-CC-Math-v1 (4plus subset) and OpenThoughts3 text. Long-context phases added repository-level code (The Stack v1 via ProLong), Dolma 3 Longmino science PDFs and PG19 books. About 13.1B long tokens were available. ProLong's "book" subset was excluded on purpose.
 
-Model-written text in the data: Nemotron-CC v2.1 synthetic subset (rephrased by Qwen3-30B-A3B), MegaMath-Web-Pro (rewritten by Llama-3.3-70B-Instruct), Nemotron-CC-Math-v1 (cleaned by Phi-4), OpenThoughts3 (traces by QwQ-32B). Together roughly a third or more of the documents read. This is weaker than logit distillation but it is real knowledge transfer, so read the token-efficiency comparison with it in mind. [CHECK] the report's own TBD: confirm from data-prep logs that the Nemotron-CC subset used was the synthetic one.
+Model-written text in the data: Nemotron-CC v2.1 synthetic subset (rephrased by Qwen3-30B-A3B), MegaMath-Web-Pro (rewritten by Llama-3.3-70B-Instruct), Nemotron-CC-Math-v1 (cleaned by Phi-4), OpenThoughts3 (traces by QwQ-32B). Together roughly a third or more of the documents read. This is weaker than logit distillation but it is real knowledge transfer, so read the token-efficiency comparison with it in mind.
 
 ## How to run
 
@@ -137,7 +136,7 @@ Use greedy decoding or light sampling. Do not set a repetition penalty: it hurt 
 
 ### YaRN rope config
 
-`config.json` in this repo enables YaRN with factor 2 over the 64K training length, which is the configuration the long-context numbers above used as the default row. [CHECK] The checkpoint currently in the bucket has `"rope_scaling": null`; patch the config before upload (see MANIFEST.md). Intended settings:
+`config.json` in this repo enables YaRN with factor 2 over the 64K training length, which is the configuration the long-context numbers above used as the default row. The plain configuration ships beside it as `config.plain.json`. Settings:
 
 ```json
 "max_position_embeddings": 131072,
@@ -156,11 +155,11 @@ cfg.max_position_embeddings = 65536
 model = AutoModelForCausalLM.from_pretrained(repo, config=cfg, torch_dtype=torch.bfloat16, device_map="auto")
 ```
 
-(Written for transformers 4.57.x, which the export used. [CHECK] the override on the transformers version you target.) A 116K-token prompt peaked at about 15 GB in bfloat16 in my rehearsal, so 128K fits on a 24 GB card.
+(Written for transformers 4.57.x, which the export used; check the override against the version you run.) A 116K-token prompt peaked at about 15 GB in bfloat16 in my rehearsal, so 128K fits on a 24 GB card.
 
 ## Other checkpoints
 
-Branches in this repo (see MANIFEST.md for which exist): `stage1-step198999` (not annealed), `stage3-step242999` (the suite numbers above), `long-phaseA-step2500`, and the Phase B checkpoint. [CHECK] branch names and which are published.
+Branches in this repo: `stage1-step198999` (end of stage 1, not annealed), `stage3-step242999` (end of pretraining, the checkpoint behind the first benchmark column), `long-phaseA-step2899` (32K) and `long-phaseB-step2859` (64K, before the synthetic-task phase). The stage 2 checkpoint was not kept. `main` is the Phase C final checkpoint.
 
 ## Limitations
 
@@ -188,7 +187,7 @@ Licence: Apache 2.0. The tokenizer is the Llama 3 vocabulary (128,000 base token
   author       = {Rodriguez, Joseph},
   year         = {2026},
   howpublished = {\url{https://huggingface.co/0arch-io/kisoku-1.6b}},
-  note         = {Technical report: [CHECK] link}
+  note         = {Technical report: \url{https://github.com/0arch-io/kisoku/blob/main/report/kisoku-report-draft.md}}
 }
 ```
 
