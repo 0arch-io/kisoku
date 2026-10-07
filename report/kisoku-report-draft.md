@@ -130,7 +130,20 @@ A few training-system facts that affected results. Checkpoints were written ever
 
 **Settings.** HellaSwag, ARC-Easy, ARC-Challenge, PIQA and WinoGrande: 0-shot, length-normalized accuracy. MMLU, GSM8K and TriviaQA: 5-shot. BBH: 3-shot with exact match after whitespace removal, using a custom copy of the task. HumanEval: pass@1 with greedy decoding. Generation tasks used a fixed batch size of 32 (16 for the TriviaQA and BBH batch).
 
-**Test set sizes** (from the contamination audit): GSM8K 1,319; MMLU 14,042; ARC-Easy 2,376; ARC-Challenge 1,172; HellaSwag 10,042; PIQA 1,838; WinoGrande 1,267; HumanEval 164; TriviaQA 17,944. HumanEval has only 164 problems, so one problem is 0.6 points, and I would treat HumanEval gaps of a few points with caution. [TBD: bootstrap confidence intervals for every cell.]
+**Test set sizes** (from the contamination audit): GSM8K 1,319; MMLU 14,042; ARC-Easy 2,376; ARC-Challenge 1,172; HellaSwag 10,042; PIQA 1,838; WinoGrande 1,267; HumanEval 164; TriviaQA 17,944. HumanEval has only 164 problems, so one problem is 0.6 points, and I would treat HumanEval gaps of a few points with caution. The table below repeats the headline numbers with 95 percent intervals (1.96 times the harness's bootstrap standard error, same runs as section 1). The intervals say which gaps are real: Kisoku's GSM8K and ARC leads over Llama 3.2 1B hold, the HumanEval differences among the 1B-class models do not, and the Kisoku stage 1 to stage 3 moves are inside the interval on every test except GSM8K and HumanEval.
+
+| Benchmark | Kisoku 1.6B (stage 3) | Kisoku stage 1 | Llama 3.2 1B | Gemma 3 1B | SmolLM2 1.7B | Qwen2.5 1.5B |
+|---|---|---|---|---|---|---|
+| GSM8K | 15.3 ± 1.9 | 6.4 ± 1.3 | 5.8 ± 1.3 | 2.0 ± 0.8 | 30.0 ± 2.5 | 60.7 ± 2.6 |
+| MMLU | 33.0 ± 0.8 | 33.2 ± 0.8 | 31.3 ± 0.8 | 26.5 ± 0.7 | 50.0 ± 0.8 | 60.9 ± 0.8 |
+| ARC-Easy | 65.4 ± 1.9 | 64.1 ± 1.9 | 61.8 ± 2.0 | 72.1 ± 1.8 | 73.5 ± 1.8 | 72.1 ± 1.8 |
+| ARC-Challenge | 39.8 ± 2.8 | 39.4 ± 2.8 | 36.9 ± 2.8 | 38.0 ± 2.8 | 46.9 ± 2.9 | 45.2 ± 2.9 |
+| BBH | 29.2 ± 1.0 | 28.2 ± 1.0 | 28.3 ± 1.0 | 28.4 ± 1.0 | 31.4 ± 1.0 | 21.4 ± 0.8 |
+| PIQA | 73.9 ± 2.0 | 73.1 ± 2.0 | 74.9 ± 2.0 | 74.7 ± 2.0 | 77.9 ± 1.9 | 75.6 ± 2.0 |
+| WinoGrande | 57.3 ± 2.7 | 57.3 ± 2.7 | 60.5 ± 2.7 | 59.2 ± 2.7 | 66.3 ± 2.6 | 62.9 ± 2.7 |
+| HellaSwag | 57.7 ± 1.0 | 56.9 ± 1.0 | 64.2 ± 0.9 | 62.1 ± 0.9 | 71.3 ± 0.9 | 67.8 ± 0.9 |
+| HumanEval | 13.4 ± 5.2 | 9.1 ± 4.4 | 18.9 ± 6.0 | 6.7 ± 3.8 | not reported | 37.2 ± 7.4 |
+| TriviaQA | 22.8 ± 0.6 | 22.4 ± 0.6 | 40.7 ± 0.7 | 35.7 ± 0.7 | 49.7 ± 0.7 | 39.7 ± 0.7 |
 
 **Exclusions and why.**
 - DROP is excluded. In this harness and datasets version its targets load as the CSV header string, so any score would be meaningless.
