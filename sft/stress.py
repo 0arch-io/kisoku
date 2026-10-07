@@ -79,13 +79,15 @@ REF_SYSTEM = ("You are Kisoku, a small open language model (about 1.6 billion pa
 def student(msgs):
     if os.environ.get("KISOKU_REF_SYSTEM") == "1": msgs = [{"role": "system", "content": REF_SYSTEM}] + msgs
     body = {"messages": msgs, "max_tokens": 700, "temperature": 0.6, "top_p": 0.9, "repeat_penalty": 1.05}
-    for _ in range(3):
+    for attempt in range(60):   # the server may sit behind an ssh tunnel that drops for a minute or two: wait it out (up to ~15 min)
         try:
             r = requests.post(f"http://localhost:{PORT}/v1/chat/completions", json=body, timeout=600).json()
-            return (r["choices"][0]["message"].get("content") or "").strip()
+            out = (r["choices"][0]["message"].get("content") or "").strip()
+            if out: return out
         except Exception:
-            time.sleep(2)
-    return ""
+            pass
+        time.sleep(15)
+    raise RuntimeError("no reply from the model server after 15 minutes")
 
 
 def cmd_rollout(tag, only=None):
@@ -96,8 +98,11 @@ def cmd_rollout(tag, only=None):
     lock = threading.Lock(); done = [0]
     def work(s):
         msgs = []
-        for u in s["user"]:
-            msgs.append({"role": "user", "content": u}); msgs.append({"role": "assistant", "content": student(msgs)})
+        try:
+            for u in s["user"]:
+                msgs.append({"role": "user", "content": u}); msgs.append({"role": "assistant", "content": student(msgs)})
+        except RuntimeError as e:   # left out of the file, so a rerun picks it up
+            print(s["id"], e, flush=True); return
         with lock:
             with out.open("a") as f: f.write(json.dumps({"id": s["id"], "task": s["task"], "messages": msgs}, ensure_ascii=False) + "\n")
             done[0] += 1
