@@ -247,7 +247,7 @@ It is not a general "YaRN helps inside the trained range" effect. I gave the sam
 
 (The plain 32K cells are same-machine reruns; the plain 16K and 64K cells are from the main table's RTX 4090 runs.) For both Qwen3 models YaRN costs 7 to 12 points inside the trained range, and for the 0.6B it buys about 15 points beyond it at 64K, which is the usual YaRN trade. Kisoku shows the same shape one octave up: no gain through 32K (58.8 against 60.1) and a large gain at 64K. The difference is that 64K is inside Kisoku's training range on paper. My reading, which I have not tested, is that the 64K phases were short (about 4,160 steps), so positions near the top of the window are under-trained and behave like extrapolation; the plain score falling from 60.1 at 32K to 45.7 at 64K fits that. If so, the honest description is "YaRN repairs an under-trained top octave", not "YaRN improves a trained range".
 
-The chat fine-tune keeps most of it: chat-sft-005 with YaRN x2 scores 77.0 at 4K, 59.6 at 32K and 54.5 at 64K (base with YaRN: 76.1, 58.8, 56.7). Every number in this paragraph is a single run of 650 samples with no confidence interval.
+The chat fine-tune keeps most of it: the released chat model (pass 9) with YaRN x2 scores 76.5 at 4K, 60.5 at 32K and 54.3 at 64K (base with YaRN: 76.1, 58.8, 56.7; pass 5: 77.0, 59.6, 54.5), so it stays ahead of Llama 3.2 1B at all three lengths (73.5, 56.7, 49.2). Every number in this paragraph is a single run of 650 samples with no confidence interval.
 
 Part of the gap to the leaders may be format, not ability. In Phase A diagnostic runs the model often stopped immediately on counting tasks or rambled ("Answer: Answer:") on question tasks, which looks like base-model format habit that instruction data may fix. A forced minimum of two new tokens only added 0.8 points at 4K (71.5 against 70.7 on 30 samples), so I do not use it.
 
@@ -372,21 +372,22 @@ A small gain, concentrated in short phrases. The case that prompted it (a misspe
 
 **What remains in the released chat model.** About half of its turns in a long conversation are unacceptable to a strict judge, most often because it loses track of what it said earlier or builds on its own previous mistake. A typo in a longer request can lose the request. It refuses some requests it could simply take ("be my tutor"). It states wrong answers to hard math as confidently as right ones: on one competition-style algebra question it gave the correct value in 9 of 24 samples and six different wrong values in the others.
 
-**Benchmarks.** Chat training did not cost the model its benchmark scores overall. The pass 5 chat model on the same base-style tests (no chat template, same harness), against the base model's scores from the scorecard:
+**Benchmarks.** Chat training did not cost the model its benchmark scores overall. The released chat model (pass 9) and pass 5 on the same base-style tests (no chat template, same harness), against the base model's scores from the scorecard:
 
-| Test | Base | Chat, pass 5 |
-|---|---|---|
-| GSM8K | 15.3 | 19.6 |
-| ARC-Easy | 65.4 | 67.1 |
-| ARC-Challenge | 39.8 | 42.7 |
-| WinoGrande | 57.3 | 58.0 |
-| PIQA | 73.9 | 73.6 |
-| HellaSwag | 57.7 | 57.3 |
-| TriviaQA | 22.8 | 21.5 |
-| MMLU | 33.0 | 29.8 |
-| BBH | 29.2 | 25.2 |
+| Test | Base | Chat, pass 5 | Chat, pass 9 (released) |
+|---|---|---|---|
+| GSM8K | 15.3 | 19.6 | 20.6 |
+| HumanEval | 13.4 | not run | 14.0 |
+| ARC-Easy | 65.4 | 67.1 | 66.0 |
+| ARC-Challenge | 39.8 | 42.7 | 42.2 |
+| WinoGrande | 57.3 | 58.0 | 57.2 |
+| PIQA | 73.9 | 73.6 | 73.0 |
+| HellaSwag | 57.7 | 57.3 | 57.2 |
+| TriviaQA | 22.8 | 21.5 | 20.8 |
+| MMLU | 33.0 | 29.8 | 29.8 |
+| BBH | 29.2 | 25.2 | 26.3 |
 
-Math and science questions went up, MMLU and BBH went down by 3 to 4 points, and the rest moved by less than a point. The base column is the stage 3 checkpoint, before long-context training, so part of each difference may come from that training and not from chat fine-tuning. [TBD: short-context rerun on the final long-context checkpoint, which would separate the two.] The chat model's long-context scores (pass 5 with YaRN) are in section 7. [TBD: these nine tests and RULER for the released pass 9; the table is pass 5.]
+Math and code went up, MMLU and BBH went down by 3 points, and the rest moved by about a point or less. The two chat models agree within a point on every test, so the later passes (corrections, self-talk, typing noise) did not move the benchmarks. The base column is the stage 3 checkpoint, before long-context training, so part of each difference may come from that training and not from chat fine-tuning. [TBD: short-context rerun on the final long-context checkpoint, which would separate the two.] The chat model's long-context scores (pass 9 with YaRN) are in section 7.
 
 ## 8. What went wrong
 
