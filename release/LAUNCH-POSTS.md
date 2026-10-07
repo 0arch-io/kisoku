@@ -4,9 +4,9 @@ Post after the repos are public. Links: report https://github.com/0arch-io/kisok
 
 ## Hacker News
 
-Title (under 80 characters):
+Title (under 80 characters). The 0ARCH account is still too new for Show HN (the showlim gate), so submit as a plain link; if the gate has lifted, prefix "Show HN:".
 
-> Show HN: Kisoku 1.6B, a from-scratch LLM trained solo on a free TPU grant
+> Kisoku 1.6B: a from-scratch LLM trained solo on a free TPU grant, matches Llama 3.2 1B
 
 URL: the GitHub repo.
 
