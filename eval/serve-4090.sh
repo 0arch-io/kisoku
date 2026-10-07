@@ -4,6 +4,6 @@
 G=$1; P=$2; shift 2
 while true; do
   ssh -o IdentityAgent=none -o IdentitiesOnly=yes -o ConnectTimeout=8 -o BatchMode=yes -o ServerAliveInterval=20 -o ServerAliveCountMax=2 -o ExitOnForwardFailure=yes \
-    -L $P:127.0.0.1:$P jmmvx@100.94.140.6 "Get-NetTCPConnection -LocalPort $P -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$_.OwningProcess -Force }; X:\\WSL\\llama\\llama-server.exe -m X:\\WSL\\llama\\$G --host 127.0.0.1 --port $P --jinja -ngl 99 $*" > /tmp/claude-501/kisoku-pc-$P.log 2>&1
+    -L $P:127.0.0.1:$P "${KISOKU_PC_HOST:?set KISOKU_PC_HOST=user@host (the Windows PC with the GPU)}" "Get-NetTCPConnection -LocalPort $P -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$_.OwningProcess -Force }; X:\\WSL\\llama\\llama-server.exe -m X:\\WSL\\llama\\$G --host 127.0.0.1 --port $P --jinja -ngl 99 $*" > /tmp/claude-501/kisoku-pc-$P.log 2>&1
   sleep 15
 done
