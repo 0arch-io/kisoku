@@ -279,7 +279,7 @@ YaRN carried retrieval to almost twice the trained length, which is the same mec
 - [TBD: RULER at 128K for the plain config, and at 64K and 128K for the baselines that did not run (Gemma 3 1B ran out of GPU memory at 64K and Qwen3 1.7B at 128K)]
 - Not done: passkey retrieval and perplexity curves at 32K, 64K and about 100K. RULER's needle tasks cover retrieval; perplexity at length was not measured.
 - Not done: the Falcon-H1 1.5B baseline. It needs the mamba_ssm and causal_conv1d kernels, without which the harness falls back to a reference implementation that is too slow to run.
-- [TBD: per-task breakdown and confidence intervals]
+- Per-task breakdown: Appendix A. Confidence intervals: each RULER cell is 100 samples at 4K and 50 at 32K and 64K, so a single task cell carries a 95 percent binomial interval of about plus or minus 10 points at 4K and 14 at longer lengths, and the 13-task average about 3 to 4 points. Differences of a few points between models at one length are not meaningful; the shape across tasks is.
 
 Published long-context numbers from other sources (for example, third-party RULER results for Qwen3.5 2B and for a Llama 3.2 1B research fine-tune, arXiv 2412.18860) use different harnesses and are not comparable to mine, so I reran every baseline instead of quoting them.
 
@@ -477,6 +477,29 @@ All links are placeholders until release. An earlier preview chat model (a super
 ## 13. Acknowledgements
 
 This work was made possible by Google's TPU Research Cloud, which provided the TPU v4-32 that all pretraining ran on. I also thank the authors of MaxText, lm-evaluation-harness, and the open datasets and recipes this work builds on (Nemotron-CC [5], Ultra-FineWeb [6], StarCoder [7], FineMath, OpenWebMath [8], MegaMath [9], OpenThoughts [10], Dolma 3 and Olmo 3 [3], ProLong [2], PG-19 [11], SmolLM3 [1]), RULER [12], the Muon optimizer [13], MaxText and lm-evaluation-harness [14].
+
+## Appendix A. RULER per task
+
+Final base checkpoint with YaRN factor 2 against Llama 3.2 1B, per task, percent correct. 100 samples per task at 4K, 50 at 32K and 64K (see section 7 for the interval this implies). The averages here are the plain mean of the 13 tasks, which is how every RULER number in this report is computed.
+
+| Task | Kisoku YaRN x2, 4K | Kisoku YaRN x2, 32K | Kisoku YaRN x2, 64K | Llama 3.2 1B, 4K | Llama 3.2 1B, 32K | Llama 3.2 1B, 64K |
+|---|---|---|---|---|---|---|
+| NIAH single 1 | 100 | 100 | 100 | 100 | 100 | 100 |
+| NIAH single 2 | 100 | 100 | 100 | 100 | 100 | 100 |
+| NIAH single 3 | 90 | 92 | 90 | 68 | 80 | 78 |
+| NIAH multikey 1 | 92 | 88 | 86 | 98 | 86 | 86 |
+| NIAH multikey 2 | 97 | 88 | 66 | 90 | 28 | 16 |
+| NIAH multikey 3 | 79 | 26 | 18 | 57 | 18 | 10 |
+| NIAH multiquery | 98 | 86 | 66 | 94 | 82 | 80 |
+| NIAH multivalue | 99 | 84 | 77 | 80 | 48 | 46 |
+| Variable tracking | 38 | 5 | 32 | 88 | 72 | 34 |
+| Common words extraction | 32 | 0 | 0 | 23 | 2 | 1 |
+| Frequent words extraction | 62 | 41 | 45 | 61 | 41 | 20 |
+| QA SQuAD | 61 | 26 | 28 | 54 | 36 | 32 |
+| QA HotpotQA | 42 | 28 | 28 | 42 | 44 | 36 |
+| Average of 13 | **76.1** | **58.8** | **56.7** | **73.5** | **56.7** | **49.2** |
+
+The pattern: Kisoku is stronger on every needle task that has distractors or multiple values (multikey 2 and 3, multivalue), which is what the synthetic long-context tasks trained, and weaker on variable tracking and the two aggregation tasks (common and frequent words), which they did not cover. Both models lose most of their QA score past 4K.
 
 ## References
 
