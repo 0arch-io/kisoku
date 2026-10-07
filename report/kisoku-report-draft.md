@@ -250,7 +250,7 @@ I have to state the miss plainly. The earlier draft hoped that the case for the 
 
 The gain from the work is large against my own starting point: between the Phase A checkpoint and the final one, the plain 32K score went from 41.0 to 60.1, and the 4K score from 71.9 to 76.2.
 
-**YaRN at inference.** With YaRN factor 2, the final checkpoint's 64K score rose from 44.7 (plain config) to 56.7. It cost nothing measurable at 4K (76.1 against 76.2) and 0.5 and 0.4 points at 8K and 16K. At 32K it costs 1.3 points (58.8 against 60.1). At 128K, twice the trained length, the plain config collapses to 4.7 (only the first single-needle task and the two QA tasks score above 2), so YaRN is what makes 128K usable at all. I did not expect YaRN to help a model that was trained natively at 64K, so I reran it as a controlled test (next paragraph). The shipped config.json carries YaRN x2 as the default (the plain config is kept beside it as config.plain.json), since the plain model collapses at 128K. [TBD Joseph: confirm this choice.]
+**YaRN at inference.** With YaRN factor 2, the final checkpoint's 64K score rose from 44.7 (plain config) to 56.7. It cost nothing measurable at 4K (76.1 against 76.2) and 0.5 and 0.4 points at 8K and 16K. At 32K it costs 1.3 points (58.8 against 60.1). At 128K, twice the trained length, the plain config collapses to 4.7 (only the first single-needle task and the two QA tasks score above 2), so YaRN is what makes 128K usable at all. I did not expect YaRN to help a model that was trained natively at 64K, so I reran it as a controlled test (next paragraph). The shipped config.json carries YaRN x2 as the default (the plain config is kept beside it as config.plain.json), since the plain model collapses at 128K.
 
 **YaRN replication (2026-10-05, one machine).** The 44.7 and the 56.7 above came from different cards, so the first step was a same-machine control: all rows below ran on the RTX PRO 6000 with the settings of the main table (13 RULER tasks, 50 samples per task, 64K). "Frequencies only" keeps YaRN's rescaled low frequencies and sets its attention factor to 1.0; "attention factor only" keeps the factor a scale of 2 would use (0.1 ln 2 + 1 = 1.0693) with the frequencies left as trained.
 
@@ -547,7 +547,7 @@ Every placeholder in this draft:
 7. Contamination split for stage 1 MMLU and Gemma (no per-sample logs yet).
 8. Phase B final loss and checkpoint; Phase C wall-clock time.
 9. RULER at 64K and 128K for the baselines that did not run (Gemma 3 1B at 64K, Qwen3 1.7B and the other 32K-native models at 128K).
-10. Which RULER config (YaRN x2 or plain) ships as the default.
+10. Default config: YaRN x2 ships as the default; the plain config is included beside it.
 11. Held-out long-context results (BABILong, LongBench v2), passkey and perplexity curves with YaRN to about 100K and 128K.
 12. Falcon-H1 1.5B long-context baseline (needs the Mamba kernels).
 13. RULER per-task breakdown and confidence intervals.
