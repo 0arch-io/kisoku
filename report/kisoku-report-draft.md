@@ -1,6 +1,6 @@
 # Kisoku 1.6B: A Solo, From-Scratch Pretrain on a Free TPU Grant
 
-**Joseph Rodriguez, 0ARCH.** Draft 3, 2026-10-05. Long-context training and five chat fine-tuning passes are finished. Chat-model benchmark scores are still running, so sections 7B and 14 contain placeholders.
+**Joseph Rodriguez, 0ARCH.** Draft 4, 2026-10-07. Pretraining, long-context training, nine chat fine-tuning passes and every benchmark in this report are finished. Section 14 lists what was planned and not done.
 
 ## Abstract
 
@@ -242,7 +242,7 @@ I have to state the miss plainly. The earlier draft hoped that the case for the 
 
 The gain from the work is large against my own starting point: between the Phase A checkpoint and the final one, the plain 32K score went from 41.0 to 60.1, and the 4K score from 71.9 to 76.2.
 
-**YaRN at inference.** With YaRN factor 2, the final checkpoint's 64K score rose from 44.7 (plain config) to 56.7. It cost nothing measurable at 4K (76.1 against 76.2) and 0.5 and 0.4 points at 8K and 16K. At 32K it costs 1.3 points (58.8 against 60.1). At 128K, twice the trained length, the plain config collapses to 4.7 (only the first single-needle task and the two QA tasks score above 2), so YaRN is what makes 128K usable at all. I did not expect YaRN to help a model that was trained natively at 64K, so I reran it as a controlled test (next paragraph). [TBD: which config ships as the default.]
+**YaRN at inference.** With YaRN factor 2, the final checkpoint's 64K score rose from 44.7 (plain config) to 56.7. It cost nothing measurable at 4K (76.1 against 76.2) and 0.5 and 0.4 points at 8K and 16K. At 32K it costs 1.3 points (58.8 against 60.1). At 128K, twice the trained length, the plain config collapses to 4.7 (only the first single-needle task and the two QA tasks score above 2), so YaRN is what makes 128K usable at all. I did not expect YaRN to help a model that was trained natively at 64K, so I reran it as a controlled test (next paragraph). The shipped config.json carries YaRN x2 as the default (the plain config is kept beside it as config.plain.json), since the plain model collapses at 128K. [TBD Joseph: confirm this choice.]
 
 **YaRN replication (2026-10-05, one machine).** The 44.7 and the 56.7 above came from different cards, so the first step was a same-machine control: all rows below ran on the RTX PRO 6000 with the settings of the main table (13 RULER tasks, 50 samples per task, 64K). "Frequencies only" keeps YaRN's rescaled low frequencies and sets its attention factor to 1.0; "attention factor only" keeps the factor a scale of 2 would use (0.1 ln 2 + 1 = 1.0693) with the frequencies left as trained.
 
@@ -469,17 +469,17 @@ Everything here is a plan, not a result.
 
 ## 12. Releases
 
-All links are placeholders until release. An earlier preview chat model (a supervised fine-tune of the stage 1 base) is already public on Hugging Face under 0arch-io, with GGUF quantizations. The newer chat model from section 7B is released as a preview. [TBD: its link and which pass is public.]
+Links go live on release day. An earlier preview chat model (a supervised fine-tune of the stage 1 base) is already public on Hugging Face as [0arch-io/kisoku-1.6b-preview](https://huggingface.co/0arch-io/kisoku-1.6b-preview), with GGUF quantizations. The newer chat model from section 7B, pass 9, is released as a preview at [0arch-io/kisoku-1.6b-chat](https://huggingface.co/0arch-io/kisoku-1.6b-chat); earlier passes that the report compares (5, 6 and the preference-tuned pass) are branches of the same repo.
 
-- Final base weights, bf16 safetensors, Hugging Face format: [TBD: link]
-- Stage 1 (step 198,999) and stage 3 (step 242,999) base checkpoints: [TBD: link]. The stage 2 checkpoint (step 223,999) was not kept: the run retained only its latest five checkpoints and I copied out stage 2's iterator state but not its parameters. Stage 3 started from it, so the weights are not lost, only that intermediate point.
-- Long-context checkpoints, Phase A final (step 2899), Phase B final (step 2859) and Phase C final (step 1299, which is the released base): [TBD: link]
-- GGUF builds for llama.cpp and Ollama: [TBD: link]
-- Training code, configs and run scripts (MaxText configuration, stage scripts, restart guard): [TBD: link]
-- Evaluation scripts and raw per-sample results: [TBD: link]
-- Contamination audit scripts and results: [TBD: link]
-- Synthetic long-context task generator and samples: [TBD: link]
-- Data manifests (sources, counts and mix weights; no text for sources whose licences forbid redistribution): [TBD: link]
+- Final base weights, bf16 safetensors, Hugging Face format: [0arch-io/kisoku-1.6b](https://huggingface.co/0arch-io/kisoku-1.6b)
+- Stage 1 (step 198,999) and stage 3 (step 242,999) base checkpoints: branches `stage1-step198999` and `stage3-step242999` of [the same repo](https://huggingface.co/0arch-io/kisoku-1.6b). The stage 2 checkpoint (step 223,999) was not kept: the run retained only its latest five checkpoints and I copied out stage 2's iterator state but not its parameters. Stage 3 started from it, so the weights are not lost, only that intermediate point.
+- Long-context checkpoints, Phase A final (step 2899) and Phase B final (step 2859): branches `long-phaseA-step2899` and `long-phaseB-step2859`. Phase C final (step 1299) is the released base on `main`.
+- GGUF builds for llama.cpp and Ollama (base and chat, F16, Q8_0, Q4_K_M): [0arch-io/kisoku-1.6b-gguf](https://huggingface.co/0arch-io/kisoku-1.6b-gguf)
+- Training code, configs and run scripts (MaxText configuration, stage scripts, restart guard): [https://github.com/0arch-io/kisoku](https://github.com/0arch-io/kisoku), folder `training/`
+- Evaluation scripts: `eval/` in the same repository. Raw per-sample results: [0arch-io/kisoku-1.6b-eval](https://huggingface.co/0arch-io/datasets/kisoku-1.6b-eval)
+- Contamination audit scripts and results: `contamination/` in the same repository
+- Synthetic long-context task generator and samples: `longctx-synth/` in the same repository
+- Data manifests (sources, counts and mix weights; no text for sources whose licences forbid redistribution): `README.md` and `longctx-synth/manifest.json`, `sft/*-summary.json` in the same repository
 - Model licence for the final weights: [TBD: licence; note the Llama 3.2 tokenizer terms]
 
 ## 13. Acknowledgements
@@ -543,8 +543,7 @@ Every placeholder in this draft:
 11. Held-out long-context results (BABILong, LongBench v2), passkey and perplexity curves with YaRN to about 100K and 128K.
 12. Falcon-H1 1.5B long-context baseline (needs the Mamba kernels).
 13. RULER per-task breakdown and confidence intervals.
-14. Re-run the 10-benchmark suite on the final long-context checkpoint to measure short-context regression.
-15. Chat fine-tuning: chat model scores on the base suite; chat model long-context scores; the chat model release link and which pass is public. Planned, not done: the held-out conversation stress test.
+15. Chat fine-tuning: the chat-model scores and release link are in; the preview label is deliberate, see section 7B. Planned, not done: the held-out conversation stress test.
 16. Verify the training-token figures for baselines against primary sources, and add formal citations (SmolLM3, ProLong, Olmo 3, arXiv 2412.18860, and others).
 17. Total TPU hours or chip-hours, and total out-of-pocket dollar cost.
 18. All release links and the final weights licence.
