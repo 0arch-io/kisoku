@@ -230,10 +230,11 @@ The gain from the work is large against my own starting point: between the Phase
 | Plain | 45.7 | |
 | YaRN x1.5 | 53.4 | +7.7 |
 | YaRN x2 | 56.7 | +11.0 |
+| YaRN x4 (run on the RTX 4090; its plain 64K score was 44.7) | 53.1 | +8.4 |
 | YaRN x2, frequencies only | 46.8 | +1.1 |
 | YaRN x2, attention factor only | 42.6 | -3.1 |
 
-The gain is real on one machine (45.7 to 56.7) and it grows with the scale factor over the two factors that finished. Neither half of YaRN produces it alone: the rescaled frequencies add 1.1 points, the attention factor by itself costs 3.1, and together they add 11.0. [TBD: factor 4; the run was stopped at 29%.]
+The gain is real on one machine (45.7 to 56.7), and factor 2 is the best of the three factors: 1.5 gives most of it and 4 gives back some. Neither half of YaRN produces it alone: the rescaled frequencies add 1.1 points, the attention factor by itself costs 3.1, and together they add 11.0.
 
 It is not a general "YaRN helps inside the trained range" effect. I gave the same treatment (factor 2 over the native 32K) to two other plain-RoPE models:
 
