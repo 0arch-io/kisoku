@@ -70,7 +70,7 @@ Final checkpoint, harness-built-in RULER (13 tasks, average), 100 samples per ta
 | Model | 4K | 8K | 16K | 32K | 64K | 128K |
 |---|---|---|---|---|---|---|
 | **Kisoku 1.6B, YaRN x2 (shipped default)** | **76.1** | **66.2** | **64.2** | **58.8** | **56.7** | **43.2** |
-| Kisoku 1.6B, plain (no YaRN) | 76.2 | 66.7 | 64.6 | 60.1 | 44.7 | not run |
+| Kisoku 1.6B, plain (no YaRN) | 76.2 | 66.7 | 64.6 | 60.1 | 44.7 | 4.7 |
 | Llama 3.2 1B | 73.5 | 67.4 | 61.9 | 56.7 | 49.2 | 43.1 |
 | Granite 4.0 1B (128K native) | 85.3 | 77.5 | 71.6 | 60.7 | 63.4 | 46.7 |
 | Qwen3.5 0.8B | 86.7 | 83.0 | 79.2 | 74.2 | 68.5 | 64.2 |
@@ -81,7 +81,7 @@ With YaRN, Kisoku is ahead of Llama 3.2 1B at 4K, 16K, 32K and 64K, level at 128
 Caveats that matter:
 - The Phase C training mix has 18% synthetic documents (needle lookup, definition chains, word counts, text position) that resemble parts of RULER. The RULER scores are partly format familiarity. A held-out long-context suite has not been run.
 - YaRN helps at 64K (44.7 plain to 56.7) and costs about 1.3 points at 32K. On one machine, 64K went 45.7 plain, 53.4 at factor 1.5, 56.7 at factor 2, 53.1 at factor 4. Neither half of YaRN (rescaled frequencies, attention factor) gives the gain alone. My untested reading is that the 64K training phases were short (about 4,160 steps), so the top octave is under-trained and YaRN repairs it.
-- The plain config was not run at 128K.
+- Without YaRN the model collapses at 128K (4.7 on RULER), so keep the shipped rope_scaling if you run past 64K.
 
 ## Model
 

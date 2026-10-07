@@ -226,7 +226,7 @@ I want to be clear about what this means for evaluation. These tasks resemble pa
 | Qwen3.5 0.8B | 86.7 | 83.0 | 79.2 | 74.2 | 68.5 | 64.2 |
 | Granite 4.0 1B (IBM, 128K native) | 85.3 | 77.5 | 71.6 | 60.7 | 63.4 | 46.7 |
 | **Kisoku 1.6B, final, YaRN x2** | **76.1** | **66.2** | **64.2** | **58.8** | **56.7** | **43.2** |
-| Kisoku 1.6B, final, plain (no YaRN) | 76.2 | 66.7 | 64.6 | 60.1 | 44.7 | not run |
+| Kisoku 1.6B, final, plain (no YaRN) | 76.2 | 66.7 | 64.6 | 60.1 | 44.7 | 4.7 |
 | Kisoku 1.6B, Phase A step 2500 (before), plain | 71.9 | 59.3 | 54.9 | 41.0 | not run | not run |
 | Llama 3.2 1B | 73.5 | 67.4 | 61.9 | 56.7 | 49.2 | 43.1 |
 | Qwen3 1.7B (32K native) | 89.4 | 84.2 | 78.3 | 72.3 | 42.1 | out of GPU memory |
@@ -242,7 +242,7 @@ I have to state the miss plainly. The earlier draft hoped that the case for the 
 
 The gain from the work is large against my own starting point: between the Phase A checkpoint and the final one, the plain 32K score went from 41.0 to 60.1, and the 4K score from 71.9 to 76.2.
 
-**YaRN at inference.** With YaRN factor 2, the final checkpoint's 64K score rose from 44.7 (plain config) to 56.7. It cost nothing measurable at 4K (76.1 against 76.2) and 0.5 and 0.4 points at 8K and 16K. At 32K it costs 1.3 points (58.8 against 60.1). I did not expect YaRN to help a model that was trained natively at 64K, so I reran it as a controlled test (next paragraph). The plain config was not run at 128K. [TBD: which config ships as the default.]
+**YaRN at inference.** With YaRN factor 2, the final checkpoint's 64K score rose from 44.7 (plain config) to 56.7. It cost nothing measurable at 4K (76.1 against 76.2) and 0.5 and 0.4 points at 8K and 16K. At 32K it costs 1.3 points (58.8 against 60.1). At 128K, twice the trained length, the plain config collapses to 4.7 (only the first single-needle task and the two QA tasks score above 2), so YaRN is what makes 128K usable at all. I did not expect YaRN to help a model that was trained natively at 64K, so I reran it as a controlled test (next paragraph). [TBD: which config ships as the default.]
 
 **YaRN replication (2026-10-05, one machine).** The 44.7 and the 56.7 above came from different cards, so the first step was a same-machine control: all rows below ran on the RTX PRO 6000 with the settings of the main table (13 RULER tasks, 50 samples per task, 64K). "Frequencies only" keeps YaRN's rescaled low frequencies and sets its attention factor to 1.0; "attention factor only" keeps the factor a scale of 2 would use (0.1 ln 2 + 1 = 1.0693) with the frequencies left as trained.
 
@@ -284,7 +284,7 @@ Part of the gap to the leaders may be format, not ability. In Phase A diagnostic
 YaRN carried retrieval to almost twice the trained length, which is the same mechanism planned for 64K to 128K. It also appeared to hurt short prompts (2 of 5 at 16K), a known weakness of static YaRN. The final RULER numbers above show a much smaller cost (0.4 points at 16K, none at 4K), so I would not generalize from the rehearsal; five trials per cell is a rehearsal, not a result. A 116K-token prompt peaked at 15 GB in bfloat16, so 128K fits on one 24 GB card.
 
 **Planned and missing.**
-- [TBD: RULER at 128K for the plain config, and at 64K and 128K for the baselines that did not run (Gemma 3 1B ran out of GPU memory at 64K and Qwen3 1.7B at 128K)]
+- Not done: RULER at 64K for Gemma 3 1B and at 128K for Qwen3 1.7B (out of GPU memory on the 24 GB card) and at 128K for Qwen3 0.6B, LFM2.5 and Gemma 3 (all 32K native; Qwen3 1.7B already falls to 42.1 at 64K).
 - Not done: passkey retrieval and perplexity curves at 32K, 64K and about 100K. RULER's needle tasks cover retrieval; perplexity at length was not measured.
 - Not done: the Falcon-H1 1.5B baseline. It needs the mamba_ssm and causal_conv1d kernels, without which the harness falls back to a reference implementation that is too slow to run.
 - Per-task breakdown: Appendix A. Confidence intervals: each RULER cell is 100 samples at 4K and 50 at 32K and 64K, so a single task cell carries a 95 percent binomial interval of about plus or minus 10 points at 4K and 14 at longer lengths, and the 13-task average about 3 to 4 points. Differences of a few points between models at one length are not meaningful; the shape across tasks is.
@@ -538,7 +538,7 @@ Every placeholder in this draft:
 6. Bootstrap confidence intervals for all benchmark cells.
 7. Contamination split for stage 1 MMLU and Gemma (no per-sample logs yet).
 8. Phase B final loss and checkpoint; Phase C wall-clock time.
-9. RULER at 128K for the plain config, and at 64K and 128K for the baselines that did not run.
+9. RULER at 64K and 128K for the baselines that did not run (Gemma 3 1B at 64K, Qwen3 1.7B and the other 32K-native models at 128K).
 10. Which RULER config (YaRN x2 or plain) ships as the default.
 11. Held-out long-context results (BABILong, LongBench v2), passkey and perplexity curves with YaRN to about 100K and 128K.
 12. Falcon-H1 1.5B long-context baseline (needs the Mamba kernels).
