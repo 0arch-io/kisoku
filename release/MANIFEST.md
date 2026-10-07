@@ -14,13 +14,13 @@ Existing 0arch-io repos for reference (read-only search): `kisoku-3b-base`, `kis
 | 2 | same repo, branch `stage1-step198999` | `hf/kisoku-1.6b-base-s1-198999/` | 3.2 GB | DECISION (default yes, branch) | exists. Not annealed (LR 3e-4 at stop) |
 | 3 | same repo, branch `stage2-step223999` | none. `runs/kisoku-v2-1b-stage2-iter-backup` is 25 KB of iterator state only; `runs/kisoku-v2-1b-pretrain-001/checkpoints/` keeps only 239000 to 242999 | n/a | n/a | **missing**. Report section 12 promises stage 2. DECISION: drop the promise, or check the TPU VM and worker backups (`tools/worker0-backup-20261001/`) |
 | 4 | same repo, branch `stage3-step242999` | `hf/kisoku-1.6b-base-s3-242999/` | 3.2 GB | DECISION (default yes, branch) | exists. This is the checkpoint behind the 10-benchmark table |
-| 5 | same repo, branch `long-phaseA-step2500` | `hf/kisoku-1.6b-base-longA-2500/` | 3.2 GB | DECISION | exists, but it is step 2500 of 2,900, not Phase A final (step 2899). Final is `runs/kisoku-v2-1b-longctx-a-final/2899/`, **needs conversion** (`training/convert-longA.sh`) if you want the true Phase A end. The report's "before" row used step 2500 |
-| 6 | same repo, branch `long-phaseB-step2859` | `runs/kisoku-v2-1b-longctx-b-final/2859/` (12 GB MaxText) | 3.2 GB after export | DECISION | **needs conversion** (no HF export exists) |
+| 5 | same repo, branch `long-phaseA-step2899` | `hf/kisoku-1.6b-base-longA-2899/` (exported 2026-10-07, max positions 32768) | 3.2 GB | DECISION (default yes, branch) | exists |
+| 6 | same repo, branch `long-phaseB-step2859` | `hf/kisoku-1.6b-base-longB-2859/` (exported 2026-10-07, max positions 65536) | 3.2 GB | DECISION (default yes, branch) | exists |
 | 7 | `0arch-io/kisoku-1.6b-chat` main (pass 9, preview) | `hf/kisoku-1.6b-chat-sft009/` | 3.2 GB | yes | **needs patch**: config.json has `rope_scaling: null`; add README |
 | 8 | chat branches `sft005`, `sft006`, `sft007`, `sft008`, `dpo38` | `hf/kisoku-1.6b-chat-sft005..008/`, `hf/kisoku-1.6b-chat-dpo38/` | 3.2 GB each | DECISION (default no; report compares them, so publishing 005, 006 and dpo38 is the useful subset) | exists. sft001 to 004 also exist in `hf/`, not discussed in the report |
 | 9 | `0arch-io/kisoku-1.6b-gguf`: `kisoku-1.6b-chat-sft009-F16.gguf` | `hf/gguf-kisoku-1.6b-chat-sft009/` | 3.2 GB | yes | exists (only F16) |
-| 10 | same: `kisoku-1.6b-chat-sft009-Q8_0.gguf`, `-Q4_K_M.gguf` | none | about 1.7 GB, 1 GB (estimates) | yes | **needs conversion**: run `training/build-gguf-chat.sh kisoku-1.6b-chat-sft009` on worker 0 (llama.cpp, it builds all three and uploads). Local `models/` only has Q8_0 for sft001 to sft006 (wrong passes) |
-| 11 | same: `kisoku-1.6b-base-F16 / Q8_0 / Q4_K_M.gguf` | none (no base GGUF anywhere) | 3.2 / 1.7 / 1 GB | yes | **needs conversion** from `hf/kisoku-1.6b-base-longC-1299/` (use the patched config so the GGUF metadata is right) |
+| 10 | same: `kisoku-1.6b-chat-sft009-Q8_0.gguf`, `-Q4_K_M.gguf` | `hf/gguf-kisoku-1.6b-chat-sft009/` (quantized on the Mac 2026-10-07, 1.7 GB and 1.0 GB) | 1.7 GB, 1 GB | yes | exists |
+| 11 | same: `kisoku-1.6b-base-longC-1299-F16 / Q8_0 / Q4_K_M.gguf` | `hf/gguf-kisoku-1.6b-base-longC-1299/` (F16 from worker 0, Q8 and Q4 from the Mac, 2026-10-07; plain rope config, YaRN is a llama.cpp runtime flag) | 3.2 / 1.7 / 1 GB | yes | exists (Q8/Q4 uploading) |
 | 12 | `0arch-io/kisoku-1.6b-maxtext` (raw MaxText checkpoints for continued training: stage 1, stage 3, A, B, C final) | `runs/kisoku-v2-1b-{stage1,stage3,longctx-a,longctx-b,longctx-c}-final/` | about 12 GB each, 60 GB | DECISION (default no; the report promises "intermediate checkpoints", HF exports cover that) | exists |
 | 13 | `0arch-io/kisoku-1.6b-eval` (dataset): raw per-sample results | `eval/results-20261005/`, `eval/cti-batch14/`, `eval/contamination-20261001/`; local `data/eval-results/*.tgz` (83 MB) | about 100 MB | yes | exists. Strip personal paths from logs first |
 | 14 | `0arch-io/kisoku-1.6b-sft-data` (dataset): teacher-written conversations only | `sft/kisoku-gen2-20261005/` (about 142 MB local copy `data/gen2/`) and `sft/deepseek-gen-20261002/` | about 150 MB | DECISION | exists. Do not publish merged `sft/kisoku-sft-v10/` parquet (mixes public datasets with their own licences). Check DeepSeek API terms on redistributing outputs. Remove `_spend.json`, `_run*.log`, `_failed.txt` |
@@ -69,9 +69,9 @@ Also flag: `sft/*.py` mention DeepSeek by name in system prompts and filters (fi
 ## 4. Report claims the artifacts do not support yet
 
 - Section 12 promises stage 1, 2 and 3 checkpoints. Stage 2 does not exist (row 3).
-- "Phase A" checkpoint on HF is step 2500, not 2899 (row 5). Phase B has no export (row 6).
+- Phase A final (2899) and Phase B final (2859) exported 2026-10-07 (rows 5 and 6). The old step-2500 Phase A export stays in the bucket, unused.
 - Section 7 default config (YaRN x2) is not in any exported config.json (rows 1 and 7).
-- GGUF: only one F16 file exists (rows 9 to 11).
+- GGUF: base and chat, F16 / Q8_0 / Q4_K_M, all in the bucket as of 2026-10-07 (rows 9 to 11).
 - Chat card says short-suite on the final long-context checkpoint is unmeasured. `eval/pc-run-evals-18.sh` (batch 18, 2026-10-07) was queued to measure it; check its results and update the card and report.
 - Report header says "Draft 3, 2026-10-05"; the chat tables (7B) are present, but section 10 still says "It has not been benchmarked yet" for the chat model. Fix the report before linking it.
 
