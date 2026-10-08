@@ -2,7 +2,7 @@
 # Batch 18 on the CTI box (2026-10-07, the 4090 went offline overnight): the final long-context checkpoint (Phase C 1299, plain config)
 # on the short-eval suite (no HumanEval here: it executes generated code, that one stays on the 4090), plain-config RULER at 128K,
 # and the Qwen3 1.7B YaRN x2 RULER 64K job that died with the PC. Both streams on card 2: the host ai-guard timer freezes us
-# (SIGSTOP) when card 1 hits 86 C or Jarvis gets slow, and card 1 is where 3 of 4 past freezes came from. usage: cti-run-evals-18.sh STREAM
+# (SIGSTOP) when card 1 hits 86 C or the other tenant gets slow, and card 1 is where 3 of 4 past freezes came from. usage: box2-run-evals-18.sh STREAM
 cd /models/kisoku-eval; export PATH=/models/kisoku-eval/venv/bin:$PATH HF_HOME=/models/kisoku-eval/hf TOKENIZERS_PARALLELISM=false
 R=results; M=/models/kisoku-eval/models; LOG=logs/stream-$1.log; P=$M/kisoku-1.6b-base-longC-1299
 run() { local name=$1 pre=$2 tasks=$3 fs=$4 bs=$5; shift 5

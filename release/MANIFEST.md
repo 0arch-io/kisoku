@@ -22,7 +22,7 @@ Existing 0arch-io repos for reference (read-only search): `kisoku-3b-base`, `kis
 | 10 | same: `kisoku-1.6b-chat-sft009-Q8_0.gguf`, `-Q4_K_M.gguf` | `hf/gguf-kisoku-1.6b-chat-sft009/` (quantized on the Mac 2026-10-07, 1.7 GB and 1.0 GB) | 1.7 GB, 1 GB | yes | exists |
 | 11 | same: `kisoku-1.6b-base-longC-1299-F16 / Q8_0 / Q4_K_M.gguf` | `hf/gguf-kisoku-1.6b-base-longC-1299/` (F16 from worker 0, Q8 and Q4 from the Mac, 2026-10-07; plain rope config, YaRN is a llama.cpp runtime flag) | 3.2 / 1.7 / 1 GB | yes | exists (Q8/Q4 uploading) |
 | 12 | `0arch-io/kisoku-1.6b-maxtext` (raw MaxText checkpoints for continued training: stage 1, stage 3, A, B, C final) | `runs/kisoku-v2-1b-{stage1,stage3,longctx-a,longctx-b,longctx-c}-final/` | about 12 GB each, 60 GB | DECISION (default no; the report promises "intermediate checkpoints", HF exports cover that) | exists |
-| 13 | `0arch-io/kisoku-1.6b-eval` (dataset): raw per-sample results | `eval/results-20261005/`, `eval/cti-batch14/`, `eval/contamination-20261001/`; local `data/eval-results/*.tgz` (83 MB) | about 100 MB | yes | exists. Strip personal paths from logs first |
+| 13 | `0arch-io/kisoku-1.6b-eval` (dataset): raw per-sample results | `eval/results-20261005/`, `eval/box2-batch14/`, `eval/contamination-20261001/`; local `data/eval-results/*.tgz` (83 MB) | about 100 MB | yes | exists. Strip personal paths from logs first |
 | 14 | `0arch-io/kisoku-1.6b-sft-data` (dataset): teacher-written conversations only | `sft/kisoku-gen2-20261005/` (about 142 MB local copy `data/gen2/`) and `sft/deepseek-gen-20261002/` | about 150 MB | NO (decided 2026-10-07) | exists. Do not publish merged `sft/kisoku-sft-v10/` parquet (mixes public datasets with their own licences). Check DeepSeek API terms on redistributing outputs. Remove `_spend.json`, `_run*.log`, `_failed.txt` |
 | 15 | same dataset or separate: held-out conversation test (297 scripts, judge outputs) | local `data/stress/` (240 MB; `scripts.jsonl`, `judge-*.jsonl`, `rollout-*.jsonl`) | up to 240 MB | DECISION (publish scripts, held-out ids and judge verdicts; rollouts optional) | exists |
 | 16 | long-context synthetic task samples | `datasets/longctx-synth-tasks/` (22,386 docs, 575.5M tokens) | large | DECISION (default: generator plus a few hundred samples; text derives from PG19 and Dolma 3 PDFs) | exists |
@@ -59,7 +59,7 @@ Personal paths, hosts and identifiers to generalise before the repo goes public:
 | `eval/serve-4090.sh` | **Tailscale IP `100.94.140.6` and Windows login `jmmvx@`** in an ssh command. Remove or parametrise. Highest priority |
 | `training/kisoku-v2-1b-sft.yml`, `kisoku-v2-1b-dpo.yml` | `/home/josephrodriguez/sft-data/...` (4 lines) |
 | `training/*.sh`, `sft_data_sync.py`, `longctx-synth/*`, `contamination/*`, `sft/gen_kisoku.py`, `eval/*` | bucket name `kisoku-v2-training` (about 30 files). Replace with a variable |
-| `eval/pc-*.sh`, `eval/cti-*.sh` | host names, WSL paths, `~/kisoku-eval`, `tmux` session names, CTI box references |
+| `eval/pc-*.sh`, `eval/box2-*.sh` | host names, WSL paths, `~/kisoku-eval`, `tmux` session names, second-box references |
 | `sft/quiz-heldout.jsonl` (tracked) | model outputs on 561 held-out questions; harmless but review |
 | `data/gen2/_spend.json` | DeepSeek spend, `{"usd": 73.39, ...}`: report quotes under $20 for set 2 and $15.23 for set 1; do not publish the file, reconcile figures |
 | `README.md` | already lists the pre-public checklist (generalise bucket paths, hosts, IPs) |

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Batch 14 (2026-10-05): the rest of the queue on the CTI GPU box (our container 951, 3x RTX PRO 6000 Blackwell shared with other
 # services, so each stream is pinned to one card and kept small). Same lm_eval 0.4.13 + transformers 5.17 + settings as the 4090 batches.
-# usage: cti-run-evals-14.sh STREAM   (A, B on card 2; C, D on card 1). A sanity rerun of llama-3.2-1b RULER 4K (4090: 73.5) checks
+# usage: box2-run-evals-14.sh STREAM   (A, B on card 2; C, D on card 1). A sanity rerun of llama-3.2-1b RULER 4K (4090: 73.5) checks
 # that numbers from this box match the 4090. HumanEval is NOT run here (it executes generated code; that stays on the 4090 under WSL).
 cd /models/kisoku-eval; export PATH=/models/kisoku-eval/venv/bin:$PATH HF_HOME=/models/kisoku-eval/hf TOKENIZERS_PARALLELISM=false
 R=results; M=/models/kisoku-eval/models; LOG=logs/stream-$1.log
