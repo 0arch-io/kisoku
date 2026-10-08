@@ -1,5 +1,5 @@
 #!/bin/bash
-# Batch 13b (2026-10-05, HumanEval only; the other v1 tests ran on the CTI box in batch 14): Kisoku v1 (0arch-io/kisoku-3b-base, 3B, ~60B training tokens, early 2026) through the same short-eval
+# Batch 13b (2026-10-05, HumanEval only; the other v1 tests ran on the second box in batch 14): Kisoku v1 (0arch-io/kisoku-3b-base, 3B, ~60B training tokens, early 2026) through the same short-eval
 # harness as the scorecard, to show v1 -> v2 growth. Waits for batch 12 (tmux kisoku-eval12) so only one model is on the GPU.
 # v1 runs in float32: bfloat16 rounding breaks its tiny logits (generation becomes "!!!!", HumanEval 0.0; found 2026-10-05).
 # v1 quirk: it was trained with vocab_size 128000, so the 256 special-token rows are untrained zeros and can win greedy decoding.

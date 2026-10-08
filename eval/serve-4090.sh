@@ -1,6 +1,6 @@
 #!/bin/bash
 # usage: serve-4090.sh GGUF_NAME PORT [extra llama-server args]   Serves a model from the 4090 PC on localhost:PORT and keeps
-# reconnecting (the Mac's Tailscale gets switched to the CTI tailnet for a minute now and then). Only the server on PORT is replaced.
+# reconnecting (the Mac's Tailscale gets switched to another tailnet for a minute now and then). Only the server on PORT is replaced.
 G=$1; P=$2; shift 2
 while true; do
   ssh -o IdentityAgent=none -o IdentitiesOnly=yes -o ConnectTimeout=8 -o BatchMode=yes -o ServerAliveInterval=20 -o ServerAliveCountMax=2 -o ExitOnForwardFailure=yes \

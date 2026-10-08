@@ -1,5 +1,5 @@
 #!/bin/bash
-# Batch 18 on the CTI box (2026-10-07, the 4090 went offline overnight): the final long-context checkpoint (Phase C 1299, plain config)
+# Batch 18 on the second box (2026-10-07, the 4090 went offline overnight): the final long-context checkpoint (Phase C 1299, plain config)
 # on the short-eval suite (no HumanEval here: it executes generated code, that one stays on the 4090), plain-config RULER at 128K,
 # and the Qwen3 1.7B YaRN x2 RULER 64K job that died with the PC. Both streams on card 2: the host ai-guard timer freezes us
 # (SIGSTOP) when card 1 hits 86 C or the other tenant gets slow, and card 1 is where 3 of 4 past freezes came from. usage: box2-run-evals-18.sh STREAM
@@ -25,6 +25,6 @@ case $1 in
   S) export CUDA_VISIBLE_DEVICES=2; run kisoku-longC-core $P "hellaswag,arc_easy,arc_challenge,piqa,winogrande" 0 16; run kisoku-longC-gsm8k $P gsm8k 5 16
      run kisoku-longC-bbhws $P bbh_ws default 16; run kisoku-longC-mmlu $P mmlu 5 8; run kisoku-longC-triviaqa $P triviaqa 5 16 ;;
   T) export CUDA_VISIBLE_DEVICES=2; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 65536 50 ;;
-  U) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-ctiplain $P 131072 50 ;;
+  U) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-box2plain $P 131072 50 ;;
 esac
 echo "=== STREAM $1 DONE $(date -u)" >> $LOG

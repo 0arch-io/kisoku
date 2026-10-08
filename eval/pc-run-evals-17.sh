@@ -1,5 +1,5 @@
 #!/bin/bash
-# Batch 17 (2026-10-06, RTX 4090 under WSL): what the CTI box could not finish (its host pauses our processes within minutes): Qwen3 1.7B
+# Batch 17 (2026-10-06, RTX 4090 under WSL): what the second box could not finish (its host pauses our processes within minutes): Qwen3 1.7B
 # base with YaRN x2 at 64K, and the released chat model (pass 9) on the short-eval suite. Waits for batch 16. usage: pc-run-evals-17.sh TOKEN
 export PATH=/usr/lib/wsl/lib:$HOME/ai/bin:$PATH TOKENIZERS_PARALLELISM=false
 R=~/kisoku-eval/results; M=~/kisoku-eval/models; LOG=~/logs/kisoku-eval-17.log; C9=$M/kisoku-1.6b-chat-sft009

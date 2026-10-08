@@ -1,5 +1,5 @@
 #!/bin/bash
-# Batch 15 (2026-10-06, RTX 4090 under WSL): the two YaRN replication runs that did not finish on the CTI box (batch 14, streams L and N):
+# Batch 15 (2026-10-06, RTX 4090 under WSL): the two YaRN replication runs that did not finish on the second box (batch 14, streams L and N):
 # Kisoku final with YaRN x4 at 64K, and Qwen3 1.7B base with YaRN x2 (over its native 32K) at 64K. Same lm_eval settings as batch 14.
 # Waits until the llama-server reference runs on this GPU are over (a second llama-server.exe next to the chat one means still busy).
 export PATH=/usr/lib/wsl/lib:$HOME/ai/bin:$PATH TOKENIZERS_PARALLELISM=false

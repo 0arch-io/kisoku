@@ -1,6 +1,6 @@
 #!/bin/bash
 # Batch 16 (2026-10-06, RTX 4090 under WSL): the released chat model (pass 9) on HumanEval (executes code, so it runs here, not on the
-# shared CTI box) and RULER with YaRN x2 at 4K, 32K and 64K, so the report's chat rows match the model that ships. Waits for batch 15a.
+# shared second box) and RULER with YaRN x2 at 4K, 32K and 64K, so the report's chat rows match the model that ships. Waits for batch 15a.
 # usage: pc-run-evals-16.sh ACCESS_TOKEN
 : "${KISOKU_BUCKET:?set KISOKU_BUCKET to your GCS bucket name (no gs:// prefix)}"
 export PATH=/usr/lib/wsl/lib:$HOME/ai/bin:$PATH HF_ALLOW_CODE_EVAL=1 TOKENIZERS_PARALLELISM=false

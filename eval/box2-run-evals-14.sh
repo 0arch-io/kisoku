@@ -1,5 +1,5 @@
 #!/bin/bash
-# Batch 14 (2026-10-05): the rest of the queue on the CTI GPU box (our container 951, 3x RTX PRO 6000 Blackwell shared with other
+# Batch 14 (2026-10-05): the rest of the queue on a second GPU box (our container 951, 3x RTX PRO 6000 Blackwell shared with other
 # services, so each stream is pinned to one card and kept small). Same lm_eval 0.4.13 + transformers 5.17 + settings as the 4090 batches.
 # usage: box2-run-evals-14.sh STREAM   (A, B on card 2; C, D on card 1). A sanity rerun of llama-3.2-1b RULER 4K (4090: 73.5) checks
 # that numbers from this box match the 4090. HumanEval is NOT run here (it executes generated code; that stays on the 4090 under WSL).
@@ -65,7 +65,7 @@ hub() { [ -f $M/$2/config.json ] || python -c "from huggingface_hub import snaps
 echo "=== STREAM $1 START $(date -u)" >> $LOG
 case $1 in
   A) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC $P 32768 50; ruler kisoku-longC $P 16384 50 ;;
-  B) export CUDA_VISIBLE_DEVICES=2; ruler llama-3.2-1b-ctisanity unsloth/Llama-3.2-1B 4096 100; ruler kisoku-longC $P 4096 100; ruler kisoku-longC $P 8192 100; ruler kisoku-longC-yarn2 $Y 4096 100 ;;
+  B) export CUDA_VISIBLE_DEVICES=2; ruler llama-3.2-1b-box2sanity unsloth/Llama-3.2-1B 4096 100; ruler kisoku-longC $P 4096 100; ruler kisoku-longC $P 8192 100; ruler kisoku-longC-yarn2 $Y 4096 100 ;;
   # v1 runs in float32: its logits are tiny (untrained special rows sit at logit 0 above every real token) and bfloat16
   # rounding turns generation into "!!!!" (HumanEval 0.0, found 2026-10-05). The bf16 results are kept as results/_bf16-kisoku-v1-*.
   C) export CUDA_VISIBLE_DEVICES=1 DT=float32; run kisoku-v1-core $V1 "hellaswag,arc_easy,arc_challenge,piqa,winogrande" 0 16; run kisoku-v1-gsm8k $V1 gsm8k 5 16
@@ -86,7 +86,7 @@ case $1 in
   # L: control first. The plain 64K score (44.7) came from the 4090 and the YaRN one (56.7) from this box, so rerun plain 64K HERE,
   #    then two more scale factors on Kisoku. N, O: the same treatment on two other open models with plain RoPE trained to 32K
   #    (Qwen3 1.7B and 0.6B base; plain scores from the 4090: 78.3 / 72.3 / 42.1 and 68.7 / 59.5 / 37.6 at 16K / 32K / 64K).
-  L) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-ctiplain $P 65536 50
+  L) export CUDA_VISIBLE_DEVICES=2; ruler kisoku-longC-box2plain $P 65536 50
      mkyarn $P $M/kisoku-longC-yarn1.5 65536 1.5; ruler kisoku-longC-yarn1.5 $M/kisoku-longC-yarn1.5 65536 50
      mkyarn $P $M/kisoku-longC-yarn4 65536 4; ruler kisoku-longC-yarn4 $M/kisoku-longC-yarn4 65536 50 ;;
   # P: split YaRN's two parts on Kisoku at 64K. HF YaRN (factor 2) = (a) rescaled low frequencies + (b) an attention factor
@@ -94,8 +94,8 @@ case $1 in
   P) export CUDA_VISIBLE_DEVICES=2; mkyarn $P $M/kisoku-longC-yarn2-interp 65536 2 1.0; ruler kisoku-longC-yarn2-interp $M/kisoku-longC-yarn2-interp 65536 50
      mkyarn $P $M/kisoku-longC-yarn-temp 65536 1.0001 1.0693; ruler kisoku-longC-yarn-temp $M/kisoku-longC-yarn-temp 65536 50 ;;
   N) export CUDA_VISIBLE_DEVICES=1; hub Qwen/Qwen3-1.7B-Base qwen3-1.7b; mkyarn $M/qwen3-1.7b $M/qwen3-1.7b-yarn2 32768 2
-     ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 32768 50; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 16384 50; ruler qwen3-1.7b-ctiplain $M/qwen3-1.7b 32768 50; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 65536 50 ;;
+     ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 32768 50; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 16384 50; ruler qwen3-1.7b-box2plain $M/qwen3-1.7b 32768 50; ruler qwen3-1.7b-yarn2 $M/qwen3-1.7b-yarn2 65536 50 ;;
   O) export CUDA_VISIBLE_DEVICES=2; hub Qwen/Qwen3-0.6B-Base qwen3-0.6b; mkyarn $M/qwen3-0.6b $M/qwen3-0.6b-yarn2 32768 2
-     ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 32768 50; ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 16384 50; ruler qwen3-0.6b-ctiplain $M/qwen3-0.6b 32768 50; ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 65536 50 ;;
+     ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 32768 50; ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 16384 50; ruler qwen3-0.6b-box2plain $M/qwen3-0.6b 32768 50; ruler qwen3-0.6b-yarn2 $M/qwen3-0.6b-yarn2 65536 50 ;;
 esac
 echo "=== STREAM $1 DONE $(date -u)" >> $LOG
