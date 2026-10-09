@@ -36,17 +36,21 @@ First comment (post it yourself right after submitting):
 
 6/ Everything: base weights + intermediate checkpoints, chat preview, GGUFs for Ollama, training and eval code, raw per-sample eval outputs, the report. [links]
 
-## LinkedIn
+## LinkedIn (final, 2026-10-10)
 
 Today I am releasing Kisoku 1.6B, a language model I pretrained from scratch, by myself, on a TPU grant from Google's TPU Research Cloud.
 
-On a ten-benchmark suite run through the same harness on the same machine for every model, it matches Meta's Llama 3.2 1B (five wins each) while using about 18 times less training data. It wins on reasoning and math, Llama wins on knowledge, and larger-data models like Qwen2.5 1.5B are ahead of both. I say that plainly in the report because the point of the project was to do the whole thing honestly: a contamination audit of the training data, confidence intervals on every table, and a section on what went wrong.
+On a ten-benchmark suite run through the same harness on the same machine for every model, it matches Meta's Llama 3.2 1B (five wins each) while training on about 18 times less data. It wins on reasoning and math. Llama wins on knowledge. Larger-data models like Qwen2.5 1.5B are ahead of both, and I say that plainly in the report.
 
-What is released, all Apache 2.0: the weights and intermediate checkpoints, a chat preview, GGUF builds that run offline on a laptop through Ollama, the training and evaluation code, the raw evaluation outputs, and a technical report.
+The run was not smooth. 47 starts. A data-mount bug that killed the job 13 times at the same step and cost 30 hours. A billing lapse at step 122,733. A launcher lost in a laptop migration. An eval bug that understated my own scores for weeks. It is all in the report, and the training page shows every crash on the real loss curve.
 
-Out-of-pocket cost was about $320. The rest was the grant, one RTX 4090, and time.
+Out of pocket: about $320. The rest was the grant, one RTX 4090, and time.
 
-Report and weights: [links]
+Everything is open under Apache 2.0: weights and intermediate checkpoints, a chat preview, GGUF builds that run offline through Ollama, the training and evaluation code, raw eval outputs, and the technical report.
+
+The story: https://0arch.io/core
+Weights: https://huggingface.co/0arch-io/kisoku-1.6b
+Code and report: https://github.com/0arch-io/kisoku
 
 ## Hugging Face
 
