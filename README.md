@@ -1,6 +1,6 @@
 # Kisoku 1.6B
 
-A 1.6B-parameter language model pretrained from scratch by one person on a TPU v4-32 from Google's TPU Research Cloud, on about 0.5 trillion tokens. On a 10-benchmark suite run through the same harness for every model, it matches Meta's Llama 3.2 1B (five wins each) while using about 18 times less training data. It was extended to 64K tokens of context, about 128K with YaRN. A chat fine-tune ships as a preview.
+A 1.6B-parameter language model pretrained from scratch by one person on a TPU v4-32 from Google's TPU Research Cloud, on about 0.5 trillion tokens. On a 10-benchmark suite run through the same harness for every model, it matches Meta's Llama 3.2 1B (five wins each) while using about 18 times less training data. It was extended to 64K tokens of context, about 128K with YaRN. A chat fine-tune ships as a preview. Project page: <https://0arch.io/kisoku>.
 
 This repository holds the training configuration, the evaluation and contamination-audit code, the synthetic long-context data generator, the data manifests and the technical report. Everything is Apache 2.0.
 
